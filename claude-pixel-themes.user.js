@@ -2,7 +2,7 @@
 // @name         Pixel Chat Themes
 // @name:vi      Pixel Chat Themes – hình nền pixel cho claude.ai
 // @namespace    https://github.com/aqua2409z/pixel-chat-themes
-// @version      1.2.0
+// @version      1.3.0
 // @description  Animated pixel/ASCII wallpapers behind the claude.ai chat. Type /theme to pick one.
 // @description:vi Hình nền pixel/ASCII chuyển động phía sau khung chat claude.ai. Gõ /theme để chọn.
 // @author       aqua2409z
@@ -1149,13 +1149,303 @@
     },
   });
 
+
+  /* --- Sakura Breeze (Kyoto Spring, Mt. Fuji & Torii) --- */
+  const TORII_GATE = sprite(
+    [
+      '  mmmmmmmmmmmmmm  ',
+      ' mMMMMMMMMMMMMMMm ',
+      '   r   r    r   r ',
+      '   rrrrrrrrrrrrrr ',
+      '   R            R ',
+      '   R            R ',
+      '   R            R ',
+      '   R            R ',
+      '  bbb          bbb',
+    ],
+    {
+      m: ['#7f1d1d', '#450a0a', '='],
+      M: ['#dc2626', '#991b1b', '#'],
+      r: ['#ef4444', '#b91c1c', '-'],
+      R: ['#dc2626', '#991b1b', '|'],
+      b: ['#475569', '#334155', 'b'],
+    },
+  );
+
+  const SAKURA_BRANCH_BIG = sprite(
+    [
+      '                                              bbbbbbbbbbbbbb',
+      '                                      bbbbbbbbb       bbbbbb',
+      '                              kkkkkkbbb                 bbbb',
+      '                     FffF       bbkkk   FffF                ',
+      '             FffF   fpccpf   kkk    k  fpccpf    FffF       ',
+      '            fpccpf   FffF   k      k    FffF    fpccpf      ',
+      '        l    FffF         kk      k              FffF       ',
+      '      FffF         FffF  k       k     FffF                 ',
+      '     fpccpf   l   fpccpf        k     fpccpf    l    d      ',
+      '      FffF         FffF                FffF          d      ',
+      '                                                     L      ',
+      '                                                    lGl     ',
+      '                                                     L      ',
+    ],
+    {
+      b: ['#3e2723', '#241411', '#'],
+      k: ['#5d4037', '#3e2723', '='],
+      f: ['#ffb7c5', '#ffffff', '*'],
+      F: ['#f472b6', '#fff1f2', '+'],
+      p: ['#fce7f3', '#f472b6', '°'],
+      c: ['#e11d48', '#ffffff', 'o'],
+      l: ['#86efac', '#15803d', ':'],
+      d: ['#1e293b', null, '|'],
+      L: ['#b91c1c', '#7f1d1d', '='],
+      G: ['#fef08a', '#f59e0b', '*'],
+    },
+  );
+
+  function fujiHeights(cols, fx, fw, fh) {
+    const hs = new Array(cols).fill(0);
+    const halfW = fw / 2;
+    for (let x = Math.floor(fx - halfW); x <= Math.ceil(fx + halfW); x++) {
+      if (x < 0 || x >= cols) continue;
+      const u = Math.abs(x + 0.5 - fx) / halfW;
+      if (u >= 1) continue;
+      let h = fh * Math.pow(1 - Math.pow(u, 1.35), 1.75);
+      if (u < 0.1) h *= 0.96;
+      hs[x] = Math.round(h);
+    }
+    return hs;
+  }
+
+  function spawnSakuraPetal(w, randomY, fromBranch, isFar) {
+    const C = w.cols;
+    const R = w.rows;
+    const bx = Math.max(0, C - SAKURA_BRANCH_BIG.w);
+    const startX = fromBranch ? rnd(bx + 10, C) : rnd(-4, C + 4);
+    const startY = fromBranch ? rnd(0, SAKURA_BRANCH_BIG.h) : randomY ? rnd(-5, R + 2) : rnd(-8, -1);
+    const z = isFar ? rnd(0.4, 0.6) : rnd(0.8, 1.25);
+    return {
+      x: startX,
+      y: startY,
+      vx: rnd(0.8, 1.8) * z,
+      vy: rnd(0.6, 1.5) * z,
+      swayAmp: rnd(0.7, 2.2),
+      swayFreq: rnd(1.2, 2.6),
+      ph: rnd(0, Math.PI * 2),
+      rot: rnd(0, 6.28),
+      rotSpeed: rnd(-2.5, 2.5),
+      ch: pick(['*', '+', '°', '.', 'o']),
+      bg: isFar ? pick(['#fce7f3', '#fbcfe8', '#fda4af']) : pick(['#ffb7c5', '#fbcfe8', '#fda4af', '#fce7f3', '#f472b6']),
+      fg: pick(['#ffffff', '#fff1f2', '#fce7f3']),
+      a: isFar ? rnd(0.45, 0.7) : rnd(0.75, 0.98),
+      z,
+      isFar,
+    };
+  }
+
+  THEMES.push({
+    id: 'sakura',
+    name: 'Sakura Breeze',
+    dark: false,
+    veilScale: 0.55,
+    alias: ['sakura', 'hoa', 'anhdao', 'cherry', 'kyoto', 'japan', 'fuji', 'phu si', 'torii'],
+    glyphs: '*+:.o~°',
+    bg(c, w, h, W) {
+      const hy = Math.round(W.rows * 0.76) * W.cell;
+      // Spring morning sky with pastel twilight
+      const sky = c.createLinearGradient(0, 0, 0, hy);
+      sky.addColorStop(0, '#fce7f3');
+      sky.addColorStop(0.4, '#fed7aa');
+      sky.addColorStop(0.75, '#fef3c7');
+      sky.addColorStop(1, '#ffedd5');
+      c.fillStyle = sky;
+      c.fillRect(0, 0, w, hy);
+
+      // Lake reflection
+      const lake = c.createLinearGradient(0, hy, 0, h);
+      lake.addColorStop(0, '#fbcfe8');
+      lake.addColorStop(0.2, '#93c5fd');
+      lake.addColorStop(1, '#2563eb');
+      c.fillStyle = lake;
+      c.fillRect(0, hy, w, h - hy);
+
+      // Rising Sun glow near Mt. Fuji
+      rglow(c, w * 0.32, hy * 0.9, Math.max(w, h) * 0.45, '#fb7185', 0.45);
+      // Soft warmth from cherry branch canopy
+      rglow(c, w * 0.85, hy * 0.2, Math.max(w, h) * 0.5, '#f472b6', 0.28);
+    },
+    under(w) {
+      const hy = Math.round(w.rows * 0.76);
+      const fx = Math.round(w.cols * (w.cols < 60 ? 0.42 : 0.28));
+      const fw = Math.round(clamp(w.cols * 0.52, 22, 54));
+      const fh = Math.round(clamp(w.rows * 0.36, 10, 24));
+      const fujiH = fujiHeights(w.cols, fx, fw, fh);
+
+      // Draw Mt. Fuji
+      for (let x = 0; x < w.cols; x++) {
+        const h = fujiH[x];
+        if (h <= 0) continue;
+        for (let y = hy - h; y < hy; y++) {
+          const elev = hy - y;
+          const isSnow = elev > h * 0.62 || (elev > h * 0.46 && hash(x, y, 7) < 0.38);
+          if (isSnow) {
+            w.tile(x, y, '#ffffff', '#e2e8f0', '*', 0.96);
+          } else {
+            const dx = x - fx;
+            if (dx < 0) w.tile(x, y, '#818cf8', '#c7d2fe', '/', 0.88);
+            else w.tile(x, y, '#4338ca', '#312e81', '\\', 0.92);
+          }
+        }
+        // Lake reflection of Mt. Fuji
+        const refH = Math.min(Math.round(h * 0.45), w.rows - hy);
+        for (let k = 0; k < refH; k++) {
+          w.tile(x, hy + k, '#3b82f6', null, '', 0.28 - k * 0.05);
+        }
+      }
+
+      // Torii Gate on water edge
+      const tx = Math.round(clamp(w.cols * (w.cols < 60 ? 0.05 : 0.12), 1, Math.max(2, w.cols - TORII_GATE.w - 2)));
+      const ty = hy - TORII_GATE.h + 2;
+      w.sprite(TORII_GATE, tx, ty);
+
+      // Lush Sakura Branch canopy at top-right
+      const bx = Math.max(0, w.cols - SAKURA_BRANCH_BIG.w);
+      w.sprite(SAKURA_BRANCH_BIG, bx, 0);
+
+      if (w.cols > 50) {
+        w.tile(bx - 3, 3, '#f472b6', '#ffffff', '*');
+        w.tile(bx - 5, 4, '#ffb7c5', '#fff1f2', '+');
+        w.tile(bx - 2, 5, '#e11d48', '#ffffff', 'o');
+        w.tile(bx - 6, 2, '#86efac', '#15803d', ':');
+      }
+
+      // Fallen petals on the water shore
+      for (let x = 0; x < w.cols; x += rint(3, 8)) {
+        w.tile(x, w.rows - 1, '#fce7f3', '#f472b6', pick(['*', '+', '°']), 0.65);
+      }
+    },
+    init(w) {
+      const s = w.s;
+      const count = Math.round(clamp((w.cols * w.rows) / 18, 35, 110) * (cfg.density || 1.0));
+      s.petals = Array.from({ length: count }, (_, i) => spawnSakuraPetal(w, true, false, i % 3 === 0));
+      s.gustTimer = rnd(4, 8);
+      s.gustActive = false;
+      s.gustDuration = 0;
+      s.gustStrength = 0;
+      s.birds = Array.from({ length: Math.round(clamp(w.cols / 18, 2, 6)) }, () => ({
+        x: rnd(0, w.cols),
+        y: rnd(2, w.rows * 0.35),
+        v: rnd(1.0, 2.0),
+        ph: rnd(0, 6),
+      }));
+    },
+    frame(w, dt) {
+      const s = w.s;
+      const speedMul = cfg.speed || 1.0;
+      const hy = Math.round(w.rows * 0.76);
+      const t = w.t;
+
+      // Hanging lantern subtle sway & warm glow
+      const bx = Math.max(0, w.cols - SAKURA_BRANCH_BIG.w);
+      const lx = bx + 52;
+      const ly = 12;
+      w.glow(lx, ly, 7, '#fef08a', 0.55 + 0.15 * Math.sin(t * 3));
+
+      // Birds flying over Mt. Fuji
+      for (const b of s.birds) {
+        b.x -= b.v * dt * speedMul;
+        if (b.x < -3) {
+          b.x = w.cols + rnd(2, 10);
+          b.y = rnd(2, hy * 0.45);
+        }
+        w.glyph(b.x, b.y + Math.sin(t * 1.6 + b.ph) * 0.5, Math.floor(t * 4 + b.ph) % 2 ? 'v' : '^', '#334155', 0.85);
+      }
+
+      // Wind gust logic
+      s.gustTimer -= dt;
+      if (s.gustTimer <= 0 && !s.gustActive) {
+        s.gustActive = true;
+        s.gustDuration = rnd(2.0, 3.2);
+        s.gustStrength = rnd(2.8, 4.5);
+        s.gustTimer = rnd(6, 12);
+        const burst = rint(14, 24);
+        for (let k = 0; k < burst; k++) {
+          s.petals.push(spawnSakuraPetal(w, false, true, Math.random() < 0.3));
+        }
+      }
+
+      let currentWind = 1;
+      if (s.gustActive) {
+        s.gustDuration -= dt;
+        if (s.gustDuration <= 0) s.gustActive = false;
+        else currentWind = 1 + s.gustStrength * Math.sin((s.gustDuration / 3.0) * Math.PI);
+      }
+
+      const totalSpeed = speedMul * currentWind;
+      const mouse = w.mouse;
+      const hasMouse = mouse && mouse.active;
+
+      // Lake ripples
+      for (let y = hy; y < w.rows; y++) {
+        const dir = y % 2 ? 1 : -1;
+        for (let x = 0; x < w.cols; x += 3) {
+          if (hash(Math.floor(x + t * 0.7 * dir), y, 31) < 0.09) {
+            w.glyph(x, y, '~', '#fbcfe8', 0.5);
+          }
+        }
+      }
+
+      // Parallax Petals
+      const maxPetals = Math.round(clamp((w.cols * w.rows) / 14, 50, 150) * (cfg.density || 1.0));
+      if (s.petals.length > maxPetals) s.petals.splice(0, s.petals.length - maxPetals);
+
+      for (let i = 0; i < s.petals.length; i++) {
+        const p = s.petals[i];
+        p.ph += dt * p.swayFreq * (s.gustActive ? 2.0 : 1.0);
+        const sway = Math.sin(p.ph) * p.swayAmp;
+
+        p.x -= (p.vx * totalSpeed + sway * 0.4) * dt;
+        p.y += (p.vy * totalSpeed * 0.75 + Math.abs(sway) * 0.25) * dt;
+        p.rot += p.rotSpeed * dt * totalSpeed;
+
+        if (hasMouse) {
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 12) {
+            const force = (1 - dist / 12) * 9 * dt;
+            p.x += (dx / (dist + 0.1)) * force + mouse.vx * 0.45 * dt;
+            p.y += (dy / (dist + 0.1)) * force + mouse.vy * 0.45 * dt;
+            p.rot += 14 * dt;
+          }
+        }
+
+        if (p.x < -4 || p.y > w.rows + 1) {
+          s.petals[i] = spawnSakuraPetal(w, false, Math.random() < 0.65, p.isFar);
+          continue;
+        }
+
+        const char = Math.cos(p.rot) > 0.2 ? p.ch : Math.cos(p.rot) < -0.2 ? '+' : '°';
+        w.tile(p.x, p.y, p.bg, p.fg, char, p.a * p.z);
+      }
+
+      if (s.gustActive) {
+        for (let k = 0; k < 5; k++) {
+          const wx = Math.round(w.cols - ((t * 40 + k * 18) % (w.cols + 24)));
+          const wy = Math.round(2 + (k * 4) % (w.rows - 6));
+          w.glyph(wx, wy, '~', '#ffffff', 0.45);
+          w.glyph(wx + 1, wy, '~', '#fda4af', 0.35);
+        }
+      }
+    },
+  });
+
   const ITEMS = THEMES.map((t) => t.id).concat('off');
   const byId = (id) => THEMES.find((t) => t.id === id);
 
   /* --------------------------------------------------------------- settings */
 
   const KEY = 'pixel-themes:v1';
-  const cfg = { theme: 'cloud', veil: 0.2, glass: 0.72, motion: true, button: true };
+  const cfg = { theme: 'cloud', veil: 0.2, glass: 0.72, motion: true, button: true, density: 1.0, speed: 1.0, autoCycle: false };
   try {
     Object.assign(cfg, JSON.parse(localStorage.getItem(KEY) || '{}'));
   } catch (e) {
@@ -1510,10 +1800,40 @@ html[data-pxt-on] canvas[data-pxt-ui="bg"] { display: block !important; }
     if (open) place();
   }
 
+  let mouse = { x: -999, y: -999, vx: 0, vy: 0, last: 0, active: false };
+  window.addEventListener(
+    'pointermove',
+    (e) => {
+      const now = performance.now();
+      const dt = Math.max(0.016, (now - (mouse.last || now)) / 1000);
+      const nx = e.clientX;
+      const ny = e.clientY;
+      if (mouse.last && dt > 0) {
+        mouse.vx = clamp((nx - mouse.x) / dt / 30, -10, 10);
+        mouse.vy = clamp((ny - mouse.y) / dt / 30, -10, 10);
+      }
+      mouse.x = nx;
+      mouse.y = ny;
+      mouse.last = now;
+      mouse.active = true;
+    },
+    { passive: true },
+  );
+
   function paint(dt) {
     if (!world || !world.th) return;
     world.veilColor = siteDark ? '#141413' : '#fbfaf6';
     world.veil = clamp(cfg.veil * (world.th.veilScale || 1) + (world.th.dark === siteDark ? 0 : 0.42), 0, 0.9);
+    const now = performance.now();
+    world.mouse = {
+      x: mouse.x / world.cell,
+      y: mouse.y / world.cell,
+      vx: mouse.vx || 0,
+      vy: mouse.vy || 0,
+      active: mouse.active && now - mouse.last < 800,
+    };
+    mouse.vx *= 0.85;
+    mouse.vy *= 0.85;
     world.draw(dt);
   }
 
@@ -1705,9 +2025,17 @@ html[data-pxt-on] canvas[data-pxt-ui="bg"] { display: block !important; }
           root.style.setProperty('--pxt-alpha', String(cfg.glass));
           root.style.setProperty('--pxt-blur', cfg.glass >= 0.95 ? '0px' : '12px');
         }),
+        range('Mật độ', '0.5', '2.0', 'density', () => {
+          if (world && world.th && world.th.init) world.th.init(world);
+          if (!raf) paint(0);
+        }),
+        range('Tốc độ', '0.5', '2.0', 'speed', () => {}),
         check('Chuyển động', 'motion', () => {
           if (cfg.motion) startLoop();
           else stopLoop();
+        }),
+        check('Tự đổi ngày/đêm', 'autoCycle', () => {
+          checkAutoCycle(true);
         }),
         check('Nút nổi', 'button', () => {
           fab.hidden = !cfg.button;
@@ -1862,6 +2190,20 @@ html[data-pxt-on] canvas[data-pxt-ui="bg"] { display: block !important; }
   addEventListener(
     'keydown',
     (e) => {
+      if (e.altKey && e.shiftKey && (e.code === 'ArrowRight' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        const curIdx = Math.max(0, ITEMS.indexOf(cfg.theme));
+        const nextIdx = (curIdx + 1) % ITEMS.length;
+        commit(ITEMS[nextIdx]);
+        return;
+      }
+      if (e.altKey && e.shiftKey && (e.code === 'ArrowLeft' || e.key === 'ArrowLeft')) {
+        e.preventDefault();
+        const curIdx = Math.max(0, ITEMS.indexOf(cfg.theme));
+        const prevIdx = (curIdx - 1 + ITEMS.length) % ITEMS.length;
+        commit(ITEMS[prevIdx]);
+        return;
+      }
       if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyT') {
         e.preventDefault();
         if (open) closePicker(false);
@@ -1923,6 +2265,16 @@ html[data-pxt-on] canvas[data-pxt-ui="bg"] { display: block !important; }
     command: runCommand,
   };
 
+  function checkAutoCycle(force) {
+    if (!cfg.autoCycle) return;
+    const hr = new Date().getHours();
+    const isDay = hr >= 6 && hr < 18;
+    const target = isDay ? 'sakura' : 'moon';
+    if (cfg.theme !== target || force) {
+      commit(target);
+    }
+  }
+
   function boot() {
     if (!document.body) {
       setTimeout(boot, 50);
@@ -1930,7 +2282,9 @@ html[data-pxt-on] canvas[data-pxt-ui="bg"] { display: block !important; }
     }
     sheet(PAGE_CSS, document);
     buildUI();
+    if (cfg.autoCycle) checkAutoCycle();
     applyTheme(cfg.theme);
+    setInterval(checkAutoCycle, 60000);
     say('✅ Pixel Themes đã chạy. Bấm Alt+T (hoặc nút ô vuông màu ở cạnh phải) để chọn theme.');
   }
 

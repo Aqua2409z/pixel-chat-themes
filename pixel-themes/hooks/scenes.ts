@@ -27,6 +27,7 @@ export const THEMES: Theme[] = [
   { id: 'fireflies', name: 'Fireflies', desc: 'rừng đêm, đom đóm', dark: true, alias: ['dom dom', 'domdom', 'firefly', 'rung'], accent: '#b6d94a', bubble: '#b6d94a22' },
   { id: 'moon', name: 'Moonlit', desc: 'trăng, sao, sao băng', dark: true, alias: ['trang', 'dem', 'night'], accent: '#8f9cff', bubble: '#8f9cff22' },
   { id: 'vn', name: 'Việt Nam', desc: 'cờ đỏ sao vàng tung bay', dark: false, alias: ['co', 'co do', 'co viet nam', 'co do sao vang', 'viet nam', 'vietnam', 'quoc ky', 'to quoc', 'flag'], accent: '#da251d', bubble: '#da251d22' },
+  { id: 'sakura', name: 'Sakura Breeze', desc: 'núi Phú Sĩ, cổng Torii, hoa anh đào', dark: false, alias: ['sakura', 'hoa', 'anhdao', 'cherry', 'japan', 'fuji', 'phu si', 'torii'], accent: '#f472b6', bubble: '#f472b622' },
 ]
 
 export const byId = (id: string): Theme | undefined => THEMES.find(t => t.id === id)
@@ -776,6 +777,153 @@ function vn(sc: Scene) {
   }
 }
 
+const TORII_GATE_ROWS = [
+  '  mmmmmmmmmmmmmm  ',
+  ' mMMMMMMMMMMMMMMm ',
+  '   r   r    r   r ',
+  '   rrrrrrrrrrrrrr ',
+  '   R            R ',
+  '   R            R ',
+  '   R            R ',
+  '   R            R ',
+  '  bbb          bbb',
+]
+
+const TORII_PAL: Pal = {
+  m: ['#7f1d1d', '#450a0a', '='],
+  M: ['#dc2626', '#991b1b', '#'],
+  r: ['#ef4444', '#b91c1c', '-'],
+  R: ['#dc2626', '#991b1b', '|'],
+  b: ['#475569', '#334155', 'b'],
+}
+
+const SAKURA_BRANCH_ROWS = [
+  '                                              bbbbbbbbbbbbbb',
+  '                                      bbbbbbbbb       bbbbbb',
+  '                              kkkkkkbbb                 bbbb',
+  '                     FffF       bbkkk   FffF                ',
+  '             FffF   fpccpf   kkk    k  fpccpf    FffF       ',
+  '            fpccpf   FffF   k      k    FffF    fpccpf      ',
+  '        l    FffF         kk      k              FffF       ',
+  '      FffF         FffF  k       k     FffF                 ',
+  '     fpccpf   l   fpccpf        k     fpccpf    l    d      ',
+  '      FffF         FffF                FffF          d      ',
+  '                                                     L      ',
+  '                                                    lGl     ',
+  '                                                     L      ',
+]
+
+const SAKURA_BRANCH_PAL: Pal = {
+  b: ['#3e2723', '#241411', '#'],
+  k: ['#5d4037', '#3e2723', '='],
+  f: ['#ffb7c5', '#ffffff', '*'],
+  F: ['#f472b6', '#fff1f2', '+'],
+  p: ['#fce7f3', '#f472b6', '°'],
+  c: ['#e11d48', '#ffffff', 'o'],
+  l: ['#86efac', '#15803d', ':'],
+  d: ['#1e293b', null, '|'],
+  L: ['#b91c1c', '#7f1d1d', '='],
+  G: ['#fef08a', '#f59e0b', '*'],
+}
+
+function sakura(sc: Scene) {
+  const hy = r1(sc.H * 0.76)
+  const c = sc.cell
+
+  // Sky gradient
+  const skyId = sc.id('sky')
+  sc.def(`<linearGradient id="${skyId}" x1="0" y1="0" x2="0" y2="${hy}"><stop offset="0" stop-color="#fce7f3"/><stop offset="0.4" stop-color="#fed7aa"/><stop offset="0.75" stop-color="#fef3c7"/><stop offset="1" stop-color="#ffedd5"/></linearGradient>`)
+  sc.add(`<rect width="${sc.W}" height="${hy}" fill="url(#${skyId})"/>`)
+
+  // Lake gradient
+  const lakeId = sc.id('lake')
+  sc.def(`<linearGradient id="${lakeId}" x1="0" y1="${hy}" x2="0" y2="${sc.H}"><stop offset="0" stop-color="#fbcfe8"/><stop offset="0.25" stop-color="#93c5fd"/><stop offset="1" stop-color="#2563eb"/></linearGradient>`)
+  sc.add(`<rect y="${hy}" width="${sc.W}" height="${sc.H - hy}" fill="url(#${lakeId})"/>`)
+
+  // Sunrise glow
+  sc.add(sc.glow(sc.W * 0.32, hy * 0.9, Math.max(sc.W, sc.H) * 0.45, '#fb7185', 0.45))
+  sc.add(sc.glow(sc.W * 0.85, hy * 0.25, Math.max(sc.W, sc.H) * 0.5, '#f472b6', 0.3))
+
+  // Draw Mt. Fuji tiles
+  const fx = Math.round(sc.cols * (sc.cols < 60 ? 0.42 : 0.28))
+  const fw = Math.round(Math.min(50, Math.max(20, sc.cols * 0.5)))
+  const fh = Math.round(Math.min(22, Math.max(9, sc.rows * 0.36)))
+  const halfW = fw / 2
+  const fujiTiles: Tile[] = []
+  const horizRow = Math.round(sc.rows * 0.76)
+
+  for (let x = Math.floor(fx - halfW); x <= Math.ceil(fx + halfW); x++) {
+    if (x < 0 || x >= sc.cols) continue
+    const u = Math.abs(x + 0.5 - fx) / halfW
+    if (u >= 1) continue
+    let h = fh * Math.pow(1 - Math.pow(u, 1.35), 1.75)
+    if (u < 0.1) h *= 0.96
+    const fH = Math.round(h)
+    for (let y = horizRow - fH; y < horizRow; y++) {
+      const elev = horizRow - y
+      const isSnow = elev > fH * 0.62 || (elev > fH * 0.46 && sc.rand() < 0.35)
+      if (isSnow) {
+        fujiTiles.push([x, y, '#ffffff', '#e2e8f0', '*'])
+      } else {
+        const dx = x - fx
+        if (dx < 0) fujiTiles.push([x, y, '#818cf8', '#c7d2fe', '/'])
+        else fujiTiles.push([x, y, '#4338ca', '#312e81', '\\'])
+      }
+    }
+  }
+  sc.add(sc.tiles(fujiTiles))
+
+  // Torii Gate sprite on water edge
+  const toriiId = sc.defSprite(TORII_GATE_ROWS, TORII_PAL)
+  const tx = Math.round(Math.max(1, Math.min(sc.cols - 20, sc.cols * (sc.cols < 60 ? 0.05 : 0.12))))
+  sc.add(use(toriiId, ` x="${tx * c}" y="${(horizRow - 7) * c}"`))
+
+  // Sakura Branch at top right
+  const branchId = sc.defSprite(SAKURA_BRANCH_ROWS, SAKURA_BRANCH_PAL)
+  const branchW = 60 * c
+  const bx = Math.max(0, sc.W - branchW)
+  sc.add(use(branchId, ` x="${r1(bx)}" y="0"`))
+
+  // Hanging lantern glow
+  const lx = bx + 52 * c
+  const ly = 12 * c
+  sc.add(sc.glow(lx, ly, c * 6, '#fef08a', 0.55))
+
+  // Animated Birds flying over Mt. Fuji
+  for (let b = 0; b < 3; b++) {
+    const by = sc.rnd(10, hy * 0.5)
+    const dur = r1(sc.rnd(8, 14))
+    const begin = r1(sc.rnd(0, 14))
+    sc.add(
+      `<g opacity=".85"><animateTransform attributeName="transform" type="translate" from="${sc.W + 20} ${r1(by)}" to="-20 ${r1(by + sc.rnd(-15, 15))}" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/><text fill="#334155" x="0" y="0">v</text></g>`
+    )
+  }
+
+  // Falling animated sakura petals
+  const n = Math.max(18, Math.min(48, Math.round((sc.cols * sc.rows) / 100)))
+  const petalCols = ['#ffb7c5', '#fbcfe8', '#fda4af', '#f472b6', '#ffffff']
+  for (let k = 0; k < n; k++) {
+    const x0 = sc.rnd(0, sc.W + 60)
+    const y0 = sc.rnd(-30, sc.H * 0.6)
+    const dur = r1(sc.rnd(6, 13))
+    const begin = r1(sc.rnd(0, 13))
+    const col = sc.pick(petalCols)
+    const ch = sc.pick(['*', '+', '°', '.'])
+    const glyph = sc.glyphs
+      ? `<text fill="${col}" x="0" y="0">${ch}</text>`
+      : `<circle cx="0" cy="0" r="${r1(sc.cell * 0.35)}" fill="${col}"/>`
+
+    const dx = -r1(sc.rnd(sc.W * 0.45, sc.W * 0.9))
+    const dy = r1(sc.rnd(sc.H * 0.75, sc.H * 1.3))
+    sc.add(
+      `<g opacity="${r1(sc.rnd(0.65, 0.95))}">` +
+        `<animateTransform attributeName="transform" type="translate" from="${r1(x0)} ${r1(y0)}" to="${r1(x0 + dx)} ${r1(y0 + dy)}" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+        `<g><animateTransform attributeName="transform" type="rotate" values="0;180;360" dur="${r1(sc.rnd(2.5, 5))}s" repeatCount="indefinite"/>${glyph}</g>` +
+      `</g>`
+    )
+  }
+}
+
 /* ----------------------------------------------------------------- entry */
 
 const BUILDERS: Record<string, [glyphs: string, draw: (sc: Scene) => void]> = {
@@ -788,6 +936,7 @@ const BUILDERS: Record<string, [glyphs: string, draw: (sc: Scene) => void]> = {
   fireflies: ['|/\\^.', fireflies],
   moon: ['+*.:', moon],
   vn: [':.;', vn],
+  sakura: ['*+:.o~°', sakura],
 }
 
 const SIZES: Record<Layout, [w: number, h: number, cell: number]> = {

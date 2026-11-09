@@ -1,6 +1,6 @@
 # pixel-themes (mod cho Claude Code)
 
-Hình nền pixel/ASCII chuyển động cho **tab Code của app Claude Desktop** (cũng chạy trong VS Code và app điện thoại khi xem phiên Claude Code). Có 9 theme giống bản userscript cho claude.ai: Claude Code, Cloud Drift, Honu Lagoon, Koi Pond, Jellyfish, Paper Boats, Fireflies, Moonlit, Việt Nam.
+Hình nền pixel/ASCII chuyển động cho **tab Code của app Claude Desktop** (cũng chạy trong VS Code và app điện thoại khi xem phiên Claude Code). Có 10 theme giống bản userscript cho claude.ai: Claude Code, Cloud Drift, Honu Lagoon, Koi Pond, Jellyfish, Paper Boats, Fireflies, Moonlit, Việt Nam, Sakura Breeze.
 
 Mod gồm ba phần:
 
@@ -21,7 +21,8 @@ Trong terminal: `claude plugin install pixel-themes --marketplace aqua2409z/pixe
 | Lệnh | Kết quả |
 |---|---|
 | `/pixel` | Mở bảng chọn có ảnh thu nhỏ của từng theme |
-| `/pixel koi`, `/pixel trang`, `/pixel sua` | Đổi theme theo tên hoặc tên tiếng Việt không dấu |
+| `/pixel koi`, `/pixel trang`, `/pixel sua`, `/pixel sakura` | Đổi theme theo tên hoặc tên tiếng Việt không dấu |
+| `/pixel viet nam`, `/pixel co`, `/pixel fuji` | Đổi sang theme Việt Nam hoặc Sakura Breeze |
 | `/pixel off` | Tắt |
 | `/pixel side` | Mở khung cảnh bên cạnh |
 | `/pixel band` | Bật/tắt dải cảnh trên ô chat |
@@ -37,7 +38,7 @@ Mod chính thức chỉ vẽ được ở những vị trí app cho phép: dải
 
 ```
 hooks/register.tsx   lệnh /pixel, bảng chọn, dải cảnh, khung bên cạnh, tô màu tin nhắn
-hooks/scenes.ts      9 cảnh pixel dạng SVG tự chuyển động (SMIL)
+hooks/scenes.ts      10 cảnh pixel dạng SVG tự chuyển động (SMIL)
 types/index.d.ts     kiểu của trạng thái đã lưu
 tests/pixel.test.tsx kiểm thử trên terminal, desktop, vscode, mobile
 ```

@@ -1,6 +1,6 @@
 # Pixel Chat Themes
 
-Hình nền **pixel / ASCII chuyển động** phía sau khung chat của Claude, giống các video "Claude chat theme" đang lan truyền. Có 9 cảnh: mây trôi, hồ cá koi, rùa biển, sứa phát sáng, thuyền giấy, đom đóm, trăng sao, terminal và cờ Việt Nam tung bay. Miễn phí, mã nguồn mở, không thu thập dữ liệu.
+Hình nền **pixel / ASCII chuyển động** phía sau khung chat của Claude, giống các video "Claude chat theme" đang lan truyền. Có 10 cảnh: cờ Việt Nam tung bay trên Vịnh Hạ Long, hoa anh đào Kyoto & núi Phú Sĩ, mây trôi, hồ cá koi, rùa biển, sứa phát sáng, thuyền giấy, đom đóm, trăng sao và terminal. Miễn phí, mã nguồn mở, không thu thập dữ liệu.
 
 ![Bảng chọn /theme với theme Cloud Drift](preview.png)
 
@@ -33,6 +33,7 @@ App Claude trên điện thoại (cài từ App Store / CH Play) không cho cài
 | Fireflies | `/theme dom dom` | Rừng đêm, đom đóm lập lòe |
 | Moonlit | `/theme trang` | Trăng, sao lấp lánh, sao băng, mặt biển |
 | Việt Nam | `/theme co` hoặc `/theme viet nam` | Cờ đỏ sao vàng tung bay trên nền trời bình minh, núi đá vôi Hạ Long và mặt nước lấp lánh |
+| Sakura Breeze | `/theme sakura` hoặc `/theme fuji` | Núi Phú Sĩ tuyết trắng, cổng Torii đỏ son, cành hoa anh đào cổ thụ nở rộ, đèn lồng đung đưa và cánh hoa bay theo gió |
 
 Trong tab Code của app Desktop thì dùng `/pixel` thay cho `/theme` (ví dụ `/pixel koi`).
 
@@ -44,8 +45,10 @@ Trong tab Code của app Desktop thì dùng `/pixel` thay cho `/theme` (ví dụ
 | `←` `→` | Xem thử theme |
 | `Enter` | Áp dụng (tin nhắn `/theme` **không** bị gửi cho Claude) |
 | `Esc` | Đóng, giữ theme cũ |
-| `/theme koi`, `/theme trang`, `/theme off` | Đổi thẳng theo tên hoặc tên tiếng Việt không dấu |
+| `/theme koi`, `/theme trang`, `/theme sakura`, `/theme off` | Đổi thẳng theo tên hoặc tên tiếng Việt không dấu |
+| `Alt + Shift + →` / `←` | Chuyển nhanh sang theme tiếp theo / trước đó |
 | `Alt + T` | Mở/đóng bảng chọn |
+| Rê chuột trên màn hình | Tạo gió tương tác (cánh hoa, cá bơi, cuộn xoáy) |
 | Nút ô vuông nhiều màu ở cạnh phải | Mở bảng chọn (tiện trên điện thoại) |
 
 Bộ gõ Telex hay biến `/theme` thành `/thêm`. Script hiểu cả `/thêm` và `/nen`, nên không cần tắt bộ gõ.
@@ -54,6 +57,8 @@ Trong bảng chọn còn có:
 
 - **Làm dịu nền**: phủ thêm một lớp mờ để chữ dễ đọc hơn.
 - **Độ đục khung**: độ trong của thanh bên, ô chat và bong bóng tin nhắn.
+- **Mật độ & Tốc độ**: thanh trượt điều chỉnh số lượng phần tử và tốc độ bay/rơi (chill nhẹ nhàng hoặc mưa hoa rực rỡ).
+- **Tự đổi theo giờ**: tự động bật Sakura Breeze ban ngày (6h–18h) và chuyển sang Moonlit ban đêm.
 - **Chuyển động**: tắt để nền đứng yên (đỡ tốn pin).
 - **Nút nổi**: ẩn/hiện nút ở cạnh phải.
 
@@ -142,7 +147,7 @@ Gặp lỗi hoặc muốn thêm theme mới? Mở [Issue](https://github.com/aqu
 <details>
 <summary><b>English</b></summary>
 
-**Pixel Chat Themes** adds animated pixel/ASCII wallpapers behind the Claude chat: 9 scenes (clouds, koi pond, sea turtles, jellyfish, paper boats, fireflies, moonlit sea, terminal spark, and Vietnam's flag waving over Ha Long Bay).
+**Pixel Chat Themes** adds animated pixel/ASCII wallpapers behind the Claude chat: 10 scenes (clouds, koi pond, sea turtles, jellyfish, paper boats, fireflies, moonlit sea, terminal spark, Vietnam's flag waving over Ha Long Bay, and Sakura Breeze over Mt. Fuji).
 
 - **claude.ai in a browser** (desktop, iPhone Safari, Android Firefox): install a userscript manager (Tampermonkey, Userscripts, Violentmonkey), then open the [install link](https://raw.githubusercontent.com/aqua2409z/pixel-chat-themes/main/claude-pixel-themes.user.js). Type `/theme` or press `Alt+T`.
 - **Claude Desktop, Code tab**: **+** → **Plugins** → **Add marketplace** `aqua2409z/pixel-chat-themes` → install **pixel-themes**, then run `/pixel`. Plugins can only draw a strip above the prompt, a side pane and message frames.
