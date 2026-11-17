@@ -1,6 +1,6 @@
 # Pixel Chat Themes
 
-Hình nền **pixel / ASCII chuyển động** phía sau khung chat của Claude, giống các video "Claude chat theme" đang lan truyền. Có 10 cảnh: cờ Việt Nam tung bay trên Vịnh Hạ Long, hoa anh đào Kyoto & núi Phú Sĩ, mây trôi, hồ cá koi, rùa biển, sứa phát sáng, thuyền giấy, đom đóm, trăng sao và terminal. Miễn phí, mã nguồn mở, không thu thập dữ liệu.
+Hình nền **pixel / ASCII chuyển động** phía sau khung chat của Claude, lấy cảm hứng từ [Claudinho](https://github.com/Lu1sR0/claudinho) của Luis Roberto (xem mục [Ghi nguồn](#ghi-nguồn)). Có 10 cảnh: cờ Việt Nam tung bay trên Vịnh Hạ Long, hoa anh đào Kyoto & núi Phú Sĩ, mây trôi, hồ cá koi, rùa biển, sứa phát sáng, thuyền giấy, đom đóm, trăng sao và terminal. Miễn phí, mã nguồn mở, không thu thập dữ liệu.
 
 ![Bảng chọn /theme với theme Cloud Drift](preview.png)
 
@@ -122,6 +122,15 @@ assets/, preview.png          ảnh
 - Nếu claude.ai thay đổi lớn về giao diện, có thể có khung chưa được làm trong suốt. Khi đó mở bảng `/theme` và chọn **Tắt**, rồi [báo lỗi](https://github.com/aqua2409z/pixel-chat-themes/issues).
 - Hiệu ứng kính mờ (`backdrop-filter`) tốn GPU hơn một chút trên máy yếu. Tăng **Độ đục khung** lên tối đa để tắt hiệu ứng mờ.
 
+## Ghi nguồn
+
+Dự án này lấy cảm hứng từ **[Claudinho](https://github.com/Lu1sR0/claudinho)** của **[Luis Roberto](https://github.com/Lu1sR0)**, một ứng dụng desktop cho Claude Code với hình nền ASCII động (giấy phép MIT).
+
+- 8 theme đầu tiên (Claude Code, Cloud Drift, Honu Lagoon, Koi Pond, Jellyfish, Paper Boats, Fireflies, Moonlit) lấy theo tên và ý tưởng cảnh của Claudinho.
+- Mã nguồn của Pixel Chat Themes được viết riêng, không sao chép từ Claudinho. Pixel Chat Themes là userscript cho claude.ai và plugin cho Claude Code, còn Claudinho là ứng dụng desktop cho Windows.
+
+Cảm ơn Luis Roberto vì ý tưởng ban đầu. Nếu bạn dùng Windows và muốn một ứng dụng Claude Code đầy đủ, hãy thử Claudinho.
+
 ## Góp ý, báo lỗi
 
 Gặp lỗi hoặc muốn thêm theme mới? Mở [Issue](https://github.com/aqua2409z/pixel-chat-themes/issues), nhớ kèm ảnh chụp màn hình và cho biết bạn dùng trình duyệt hay app nào. Pull request luôn được chào đón.
@@ -140,6 +149,8 @@ Gặp lỗi hoặc muốn thêm theme mới? Mở [Issue](https://github.com/aqu
 - **claude.ai in a browser** (desktop, iPhone Safari, Android Firefox): install a userscript manager (Tampermonkey, Userscripts, Violentmonkey), then open the [install link](https://raw.githubusercontent.com/aqua2409z/pixel-chat-themes/main/claude-pixel-themes.user.js). Type `/theme` or press `Alt+T`.
 - **Claude Desktop, Code tab**: **+** → **Plugins** → **Add marketplace** `aqua2409z/pixel-chat-themes` → install **pixel-themes**, then run `/pixel`. Plugins can only draw a strip above the prompt, a side pane and message frames.
 - **Claude Desktop, full window**: enable *Help → Troubleshooting → Enable Developer Mode*, open DevTools (`Ctrl+Alt+I` on Windows, `Cmd+Option+I` on Mac), paste the script into the Console. It lasts until the app restarts. See the [setup helper](https://aqua2409z.github.io/pixel-chat-themes/setup.html).
+
+Inspired by [Claudinho](https://github.com/Lu1sR0/claudinho) by Luis Roberto: the first 8 themes follow its theme names and scene ideas. The code here was written separately.
 
 MIT licensed. Donations are optional: MB Bank `0923017526` (VietQR above).
 
