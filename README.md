@@ -122,18 +122,6 @@ assets/, preview.png          ảnh
 - Nếu claude.ai thay đổi lớn về giao diện, có thể có khung chưa được làm trong suốt. Khi đó mở bảng `/theme` và chọn **Tắt**, rồi [báo lỗi](https://github.com/aqua2409z/pixel-chat-themes/issues).
 - Hiệu ứng kính mờ (`backdrop-filter`) tốn GPU hơn một chút trên máy yếu. Tăng **Độ đục khung** lên tối đa để tắt hiệu ứng mờ.
 
-## Ủng hộ tác giả
-
-Pixel Chat Themes miễn phí và sẽ luôn miễn phí. Nếu thấy hữu ích, bạn có thể mời mình ly cà phê ☕, **tuỳ tâm, không bắt buộc**. Quét mã bằng app ngân hàng bất kỳ:
-
-<img src="assets/donate-qr.png" alt="Mã VietQR ủng hộ: MB Bank, số tài khoản 0923017526" width="240">
-
-| Ngân hàng | Số tài khoản |
-|---|---|
-| MB Bank (Ngân hàng Quân đội) | `0923017526` |
-
-Nội dung chuyển khoản gợi ý: `Pixel Themes`. Bấm ⭐ **Star** cho repo hoặc chia sẻ cho bạn bè cũng là một cách ủng hộ. Cảm ơn bạn!
-
 ## Góp ý, báo lỗi
 
 Gặp lỗi hoặc muốn thêm theme mới? Mở [Issue](https://github.com/aqua2409z/pixel-chat-themes/issues), nhớ kèm ảnh chụp màn hình và cho biết bạn dùng trình duyệt hay app nào. Pull request luôn được chào đón.
