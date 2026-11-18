@@ -2,7 +2,7 @@
 // @name         Pixel Chat Themes
 // @name:vi      Pixel Chat Themes – hình nền pixel cho claude.ai
 // @namespace    https://github.com/aqua2409z/pixel-chat-themes
-// @version      1.4.0
+// @version      1.5.0
 // @description  Animated pixel/ASCII wallpapers behind the claude.ai chat. Type /theme to pick one.
 // @description:vi Hình nền pixel/ASCII chuyển động phía sau khung chat claude.ai. Gõ /theme để chọn.
 // @author       aqua2409z
@@ -1442,103 +1442,200 @@
 
   /* ----------------------------------------------------------------- galaxy */
 
-  function spawnCosmicDust(w, initial) {
-    const isFar = Math.random() < 0.6;
+  // Smooth value noise built on hash(), for the nebula clouds.
+  function gxNoise(x, y, s) {
+    const xi = Math.floor(x);
+    const yi = Math.floor(y);
+    const xf = x - xi;
+    const yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf);
+    const v = yf * yf * (3 - 2 * yf);
+    const a = hash(xi, yi, s);
+    const b = hash(xi + 1, yi, s);
+    const c = hash(xi, yi + 1, s);
+    const d = hash(xi + 1, yi + 1, s);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  }
+  const gxFbm = (x, y, s) => gxNoise(x, y, s) * 0.55 + gxNoise(x * 2.1, y * 2.1, s + 7) * 0.3 + gxNoise(x * 4.3, y * 4.3, s + 13) * 0.15;
+
+  // Where things sit; shared by the static layer and every frame.
+  function gxLayout(w) {
+    const narrow = w.cols < 70;
     return {
-      x: initial ? Math.random() * w.cols : (Math.random() < 0.5 ? -2 : w.cols + 2),
-      y: Math.random() * w.rows,
-      vx: rnd(-0.5, 0.5),
-      vy: rnd(-0.35, 0.35),
-      ch: pick(['·', '°', '*', '+', '~', '%']),
-      color: pick(['#a855f7', '#ec4899', '#06b6d4', '#60a5fa', '#fde047', '#e2e8f0']),
-      alpha: isFar ? rnd(0.3, 0.65) : rnd(0.7, 0.95),
-      isFar,
-      isExcited: false,
-      exciteTime: 0,
+      bx: Math.round(w.cols * (narrow ? 0.5 : 0.64)),
+      by: Math.round(w.rows * 0.42),
+      R: clamp(Math.round(Math.min(w.cols / 3, w.rows) * 0.105), 3, 8),
+      px: Math.round(w.cols * (narrow ? 0.2 : 0.13)),
+      py: Math.round(w.rows * 0.8),
+      pr: clamp(Math.round(Math.min(w.cols / 2.5, w.rows) * 0.13), 3, 10),
+      gx: Math.round(w.cols * (narrow ? 0.25 : 0.2)),
+      gy: Math.round(w.rows * 0.2),
+      gs: clamp(Math.round(Math.min(w.cols / 3, w.rows) * 0.09), 3, 8),
     };
   }
 
-  function drawBlackHole(w, cx, cy, R, angle) {
-    const rx = R * 2.8;
-    const ry = R * 0.72;
+  // Ice giant with a tilted ring, lit from the black hole's side.
+  function gxPlanet(w, px, py, pr) {
+    const bands = ['#312e81', '#4338ca', '#6366f1', '#a5b4fc', '#818cf8', '#3730a3'];
+    const ringA = pr * 2.2;
+    const ringB = pr * 0.6;
+    const spanY = Math.ceil(ringB + ringA * 0.16) + 1;
+    const ring = (front) => {
+      for (let dy = -spanY; dy <= spanY; dy++) {
+        for (let dx = -Math.ceil(ringA); dx <= Math.ceil(ringA); dx++) {
+          const ty = dy - dx * 0.16;
+          if (front ? ty < 0 : ty >= 0) continue;
+          const e = Math.hypot(dx / ringA, ty / ringB);
+          if (e < 0.6 || e > 1 || (e > 0.8 && e < 0.86)) continue;
+          const col = e < 0.7 ? '#e0e7ff' : e < 0.8 ? '#c4b5fd' : '#94a3b8';
+          w.tile(px + dx, py + dy, col, '#475569', e < 0.8 ? '=' : '-', front ? 0.85 : 0.55);
+        }
+      }
+    };
+    w.glow(px, py, pr * 2, '#6366f1', 0.28);
+    ring(false);
+    for (let dy = -pr; dy <= pr; dy++) {
+      for (let dx = -pr; dx <= pr; dx++) {
+        const d2 = dx * dx + dy * dy;
+        if (d2 > pr * pr) continue;
+        const bi = Math.floor((dy / pr + 1) * 3 + Math.sin(dx * 0.7) * 0.4);
+        const band = bands[((bi % bands.length) + bands.length) % bands.length];
+        w.tile(px + dx, py + dy, band, '#1e1b4b', hash(dx, dy, 9) < 0.5 ? '~' : '-', 1);
+        const lit = ((dx - dy) / pr) * 0.7;
+        const shade = clamp(-lit * 0.6 + 0.12, 0, 0.82);
+        if (shade > 0.02) w.tile(px + dx, py + dy, '#020617', null, null, shade);
+        if (d2 > (pr - 1) * (pr - 1) && lit > 0.25) w.glyph(px + dx, py + dy, '·', '#e0e7ff', 0.7);
+      }
+    }
+    ring(true);
+  }
 
-    // 1. Accretion Disk (Swirling plasma disk around event horizon)
-    for (let dx = -Math.ceil(rx); dx <= Math.ceil(rx); dx++) {
-      const u = dx / rx;
-      if (Math.abs(u) > 1) continue;
-      const spanY = ry * Math.sqrt(1 - u * u);
-      const x = cx + dx;
+  // Slowly turning spiral galaxy far away.
+  function gxSpiral(w, gx, gy, gs, rot) {
+    w.glow(gx, gy, gs * 1.8, '#c4b5fd', 0.3);
+    for (let arm = 0; arm < 2; arm++) {
+      for (let k = 0; k < 30; k++) {
+        const f = k / 30;
+        const ang = rot + arm * Math.PI + f * 2.6 * Math.PI;
+        const r = gs * (0.15 + f * 0.95) + (hash(k, arm, 5) - 0.5) * 0.6;
+        const col = f < 0.25 ? '#fef9c3' : f < 0.6 ? '#c4b5fd' : '#60a5fa';
+        w.glyph(gx + Math.cos(ang) * r * 1.7, gy + Math.sin(ang) * r * 0.55, f < 0.3 ? '*' : hash(k, arm, 6) < 0.5 ? '·' : '.', col, 0.9 - f * 0.55);
+      }
+    }
+    w.tile(gx, gy, '#fef3c7', '#ffffff', '*', 0.95);
+  }
 
-      for (let dy = -Math.ceil(spanY); dy <= Math.ceil(spanY); dy++) {
-        const y = cy + dy;
-        const distFromCenter = Math.hypot(dx, dy * 2.8);
-        if (distFromCenter < R * 0.92) continue; // inside event horizon
-
-        const rNorm = (distFromCenter - R * 0.92) / (rx - R * 0.92);
-        const theta = Math.atan2(dy, dx);
-        const swirl = Math.sin(theta * 2.0 + angle * 3.5 - rNorm * 4.0);
-
+  // Half of the accretion disk. The far half goes behind the shadow, the near half in front of it.
+  function gxDisk(w, L, ang, front) {
+    const { bx, by, R } = L;
+    const rx = R * 3.1;
+    const ry = R * 0.6;
+    const ein = (R * 1.3) / rx;
+    const y0 = front ? 0 : -Math.ceil(ry);
+    const y1 = front ? Math.ceil(ry) : -1;
+    for (let dy = y0; dy <= y1; dy++) {
+      for (let dx = -Math.ceil(rx); dx <= Math.ceil(rx); dx++) {
+        const e = Math.hypot(dx / rx, dy / ry);
+        if (e > 1 || e < ein) continue;
+        const rn = (e - ein) / (1 - ein);
+        const th = Math.atan2(dy / ry, dx / rx);
+        const beam = 0.78 - 0.42 * Math.cos(th); // Doppler beaming: the side coming toward us is brighter
+        const sw = Math.sin(th * 3 - ang * 4 + rn * 8);
         let bg = null;
-        let fg = '#f59e0b';
-        let ch = swirl > 0.3 ? '#' : swirl < -0.3 ? '%' : '*';
-        let a = clamp(1.0 - rNorm * 0.5, 0.4, 0.95);
-
-        if (rNorm < 0.22) {
+        let fg;
+        let ch;
+        if (rn < 0.16) {
+          bg = '#fde68a';
           fg = '#ffffff';
-          bg = '#fef08a';
           ch = '*';
-          a = 1.0;
-        } else if (rNorm < 0.52) {
-          fg = '#fbbf24';
-          bg = '#ea580c';
-        } else if (rNorm < 0.78) {
-          fg = '#f43f5e';
+        } else if (rn < 0.42) {
+          bg = sw > 0.2 ? '#f59e0b' : null;
+          fg = '#fde68a';
+          ch = sw > 0.2 ? '#' : '=';
+        } else if (rn < 0.72) {
+          fg = sw > 0 ? '#fb923c' : '#f43f5e';
+          ch = sw > 0.3 ? '%' : '~';
         } else {
-          fg = '#7c3aed';
-          ch = '.';
+          fg = '#a855f7';
+          ch = sw > 0 ? '·' : '.';
         }
-
-        w.tile(x, y, bg, fg, ch, a);
+        w.tile(bx + dx, by + dy, bg, fg, ch, clamp((1.05 - rn * 0.75) * beam * (0.78 + 0.22 * sw), 0.06, 1));
       }
     }
+  }
 
-    // 2. Gravitational Lensing Arcs (Light bent over the top and beneath)
-    const arcSpan = Math.ceil(R * 1.95);
-    for (let dx = -arcSpan; dx <= arcSpan; dx++) {
-      const u = dx / (R * 1.95);
-      if (Math.abs(u) > 1) continue;
-      const arcH = Math.sqrt(1 - u * u) * (R * 0.78);
-
-      const upperY = Math.round(cy - R * 0.95 - arcH);
-      const lowerY = Math.round(cy + R * 0.95 + arcH);
-      const x = cx + dx;
-
-      const flare = Math.sin(angle * 2.0 + dx * 0.45);
-      const col = flare > 0 ? '#fbbf24' : '#f97316';
-      w.tile(x, upperY, '#ea580c', '#ffffff', '*', 0.88);
-      w.tile(x, lowerY, null, col, '~', 0.72);
+  // Light from the far side of the disk, bent over the top and under the bottom of the shadow.
+  function gxArcs(w, L, t) {
+    const { bx, by, R } = L;
+    const a = R * 1.75;
+    const b = R * 1.45;
+    const steps = Math.ceil(Math.PI * a * 1.6);
+    for (let k = 0; k <= steps; k++) {
+      const phi = (k / steps) * Math.PI;
+      const u = Math.cos(phi);
+      const h = Math.sin(phi);
+      const beam = 0.8 - 0.35 * u;
+      const fl = 0.85 + 0.15 * Math.sin(t * 3 + k * 0.4);
+      const x = bx + u * a;
+      w.tile(x, by - h * b, '#f59e0b', '#fff7ed', '*', clamp(0.92 * beam * fl, 0, 1));
+      w.glyph(x, by - h * b - 1, '~', '#fbbf24', 0.4 * beam * h);
+      w.glyph(x, by + h * b * 0.82, '~', '#fb923c', 0.55 * beam * fl);
     }
+  }
 
-    // 3. Event Horizon (Absolute Void at core)
-    for (let dy = -Math.ceil(R); dy <= Math.ceil(R); dy++) {
-      for (let dx = -Math.ceil(R * 1.15); dx <= Math.ceil(R * 1.15); dx++) {
-        const d = Math.hypot(dx / 1.15, dy);
-        if (d <= R) {
-          w.tile(cx + dx, cy + dy, '#000000', '#000000', ' ', 1.0);
-        } else if (d <= R + 0.85) {
-          // Photon ring
-          const col = Math.random() < 0.4 ? '#ffffff' : '#fef08a';
-          w.tile(cx + dx, cy + dy, '#f59e0b', col, '*', 0.95);
+  // The shadow (solid, no tile gaps) and its photon ring.
+  function gxHorizon(w, L, t, flash) {
+    const { bx, by, R } = L;
+    const c = w.cell;
+    w.ctx.fillStyle = '#000000';
+    for (let dy = -R - 1; dy <= R + 1; dy++) {
+      for (let dx = -R - 1; dx <= R + 1; dx++) {
+        const d = Math.hypot(dx, dy);
+        if (d <= R - 0.2) {
+          w.ctx.fillRect((bx + dx) * c, (by + dy) * c, c, c);
+        } else if (d <= R + 0.7) {
+          const th = Math.atan2(dy, dx);
+          w.tile(bx + dx, by + dy, '#fbbf24', '#ffffff', '·', clamp(0.7 + 0.25 * Math.sin(t * 2.5 + th * 3) + flash, 0, 1));
         }
       }
     }
+  }
+
+  function gxDust(w, initial) {
+    const far = Math.random() < 0.55;
+    const sp = far ? 0.25 : 0.6;
+    let bvx = rnd(-sp, sp);
+    let bvy = rnd(-sp, sp) * 0.6;
+    let x = Math.random() * w.cols;
+    let y = Math.random() * w.rows;
+    if (!initial) {
+      const e = rint(0, 3);
+      if (e === 0) (x = -1), (bvx = Math.abs(bvx));
+      else if (e === 1) (x = w.cols + 1), (bvx = -Math.abs(bvx));
+      else if (e === 2) (y = -1), (bvy = Math.abs(bvy));
+      else (y = w.rows + 1), (bvy = -Math.abs(bvy));
+    }
+    return {
+      x,
+      y,
+      vx: bvx,
+      vy: bvy,
+      bvx,
+      bvy,
+      far,
+      ex: 0,
+      sl: 0,
+      ch: pick(far ? ['·', '.', '°'] : ['*', '+', '·', '°', '~']),
+      color: pick(['#a78bfa', '#f472b6', '#67e8f9', '#93c5fd', '#fde68a', '#e2e8f0']),
+      a: far ? rnd(0.25, 0.55) : rnd(0.6, 0.95),
+    };
   }
 
   THEMES.push({
     id: 'galaxy',
     name: 'Cosmic Galaxy',
     dark: true,
-    alias: ['galaxy', 'vu tru', 'vutru', 'ngan ha', 'nganha', 'blackhole', 'space', 'sao', 'nebula', 'cosmos'],
+    alias: ['galaxy', 'vu tru', 'vutru', 'ngan ha', 'nganha', 'blackhole', 'ho den', 'space', 'nebula', 'cosmos'],
     glyphs: '·*+°~%#@',
     bg(c, w, h) {
       const g = c.createLinearGradient(0, 0, w, h);
@@ -1548,177 +1645,257 @@
       g.addColorStop(1, '#02040d');
       c.fillStyle = g;
       c.fillRect(0, 0, w, h);
+      const v = c.createRadialGradient(w * 0.6, h * 0.45, Math.min(w, h) * 0.2, w * 0.5, h * 0.5, Math.max(w, h) * 0.75);
+      v.addColorStop(0, 'rgba(0,0,0,0)');
+      v.addColorStop(1, 'rgba(0,0,0,0.55)');
+      c.fillStyle = v;
+      c.fillRect(0, 0, w, h);
+    },
+    // Drawn once: nebula clouds and the ringed planet.
+    under(w) {
+      const L = gxLayout(w);
+      w.glow(w.cols * 0.2, w.rows * 0.35, Math.max(w.cols, w.rows) * 0.35, '#7c3aed', 0.22);
+      w.glow(w.cols * 0.8, w.rows * 0.75, Math.max(w.cols, w.rows) * 0.35, '#0891b2', 0.18);
+      w.glow(w.cols * 0.45, w.rows * 0.15, Math.max(w.cols, w.rows) * 0.25, '#db2777', 0.14);
+      const clouds = [
+        { s: 101, sx: 0.05, sy: 0.08, bg: '#3b0764', fg: '#a78bfa' },
+        { s: 202, sx: 0.07, sy: 0.06, bg: '#500724', fg: '#f472b6' },
+        { s: 303, sx: 0.06, sy: 0.09, bg: '#083344', fg: '#67e8f9' },
+      ];
+      for (let j = 0; j < w.rows; j++) {
+        for (let i = 0; i < w.cols; i++) {
+          let best = null;
+          let bv = 0;
+          for (const cl of clouds) {
+            const n = gxFbm(i * cl.sx, j * cl.sy, cl.s);
+            if (n > bv) (bv = n), (best = cl);
+          }
+          const k = (bv - 0.56) / 0.3;
+          if (k <= 0) continue;
+          const ch = k > 0.75 ? '%' : k > 0.45 ? ':' : hash(i, j, 77) < 0.5 ? '.' : '·';
+          w.tile(i, j, k > 0.35 ? best.bg : null, best.fg, ch, clamp(k * 0.5, 0.06, 0.45));
+        }
+      }
+      gxPlanet(w, L.px, L.py, L.pr);
     },
     init(w) {
       const density = cfg.density || 1.0;
-      const starCount = Math.round(clamp((w.cols * w.rows) / 12, 60, 160) * density);
-      const dustCount = Math.round(clamp((w.cols * w.rows) / 8, 80, 220) * density);
-
-      const stars = Array.from({ length: starCount }, () => ({
-        x: Math.random() * w.cols,
-        y: Math.random() * w.rows,
-        twinkleSpeed: rnd(0.8, 3.2),
-        phase: Math.random() * Math.PI * 2,
-        color: pick(['#ffffff', '#e0e7ff', '#c7d2fe', '#fef08a', '#a5f3fc', '#fbcfe8']),
-        ch: pick(['.', '·', '+', '*']),
-        baseAlpha: rnd(0.25, 0.85),
-      }));
-
-      const dust = Array.from({ length: dustCount }, () => spawnCosmicDust(w, true));
-
+      const area = w.cols * w.rows;
       w.s = {
-        stars,
-        dust,
+        stars: Array.from({ length: Math.round(clamp(area / 12, 60, 180) * density) }, () => ({
+          x: Math.random() * w.cols,
+          y: Math.random() * w.rows,
+          z: pick([0.25, 0.5, 1]),
+          tw: rnd(0.8, 3.2),
+          ph: Math.random() * Math.PI * 2,
+          color: pick(['#ffffff', '#e0e7ff', '#c7d2fe', '#fef08a', '#a5f3fc', '#fbcfe8']),
+          ch: pick(['.', '·', '+', '*']),
+          base: rnd(0.25, 0.8),
+        })),
+        hero: Array.from({ length: clamp(Math.round(area / 900), 3, 9) }, () => ({
+          x: rint(2, w.cols - 3),
+          y: rint(2, w.rows - 3),
+          tw: rnd(0.6, 1.6),
+          ph: Math.random() * Math.PI * 2,
+          color: pick(['#a5f3fc', '#fde68a', '#f9a8d4', '#c4b5fd']),
+        })),
+        dust: Array.from({ length: Math.round(clamp(area / 9, 70, 200) * density) }, () => gxDust(w, true)),
         meteors: [],
         nextMeteor: rnd(2.0, 5.0),
-        bhAngle: 0,
+        trail: [],
+        ang: 0,
+        flash: 0,
       };
     },
     frame(w, dt) {
       const s = w.s;
       const t = w.t;
-      const speedMul = cfg.speed || 1.0;
+      const sp = cfg.speed || 1.0;
       const mouse = w.mouse;
-      const hasMouse = mouse && mouse.active;
+      const hasMouse = !!(mouse && mouse.active);
+      const L = gxLayout(w);
 
-      // 1. Nebula clouds & cosmic ambient glow
-      const cx = Math.round(w.cols * (w.cols < 60 ? 0.5 : 0.65));
-      const cy = Math.round(w.rows * 0.44);
-      const bhRadius = clamp(Math.round(Math.min(w.cols, w.rows) * 0.08), 4, 8);
+      // Black hole aura, breathing slowly
+      const breath = 0.85 + 0.15 * Math.sin(t * 0.8);
+      w.glow(L.bx, L.by, L.R * 5, '#f59e0b', 0.24 * breath);
+      w.glow(L.bx, L.by, L.R * 2.8, '#ec4899', 0.3 * breath);
 
-      w.glow(cx, cy, bhRadius * 4.2, '#f59e0b', 0.28);
-      w.glow(cx, cy, bhRadius * 2.5, '#ec4899', 0.35);
-      w.glow(w.cols * 0.22, w.rows * 0.32, Math.max(w.cols, w.rows) * 0.35, '#8b5cf6', 0.18);
-      w.glow(w.cols * 0.78, w.rows * 0.72, Math.max(w.cols, w.rows) * 0.38, '#06b6d4', 0.16);
-
-      // 2. Stars twinkling
-      for (let i = 0; i < s.stars.length; i++) {
-        const star = s.stars[i];
-        const alpha = clamp(star.baseAlpha + Math.sin(t * star.twinkleSpeed + star.phase) * 0.35, 0.1, 1.0);
-        w.glyph(star.x, star.y, star.ch, star.color, alpha);
+      // Stars: three depths drifting at different speeds, bent away from the cursor (lensing)
+      for (const st of s.stars) {
+        st.x -= st.z * 0.12 * dt * sp;
+        if (st.x < 0) st.x += w.cols;
+        let x = st.x;
+        let y = st.y;
+        let a = clamp(st.base + Math.sin(t * st.tw + st.ph) * 0.35, 0.05, 1);
+        if (hasMouse) {
+          const dx = x - mouse.x;
+          const dy = y - mouse.y;
+          const d = Math.hypot(dx, dy);
+          if (d < 7 && d > 0.01) {
+            const push = 2.4 * (1 - d / 7);
+            x += (dx / d) * push;
+            y += (dy / d) * push;
+            a = Math.min(1, a + 0.35);
+          }
+        }
+        w.glyph(x, y, st.ch, st.color, a);
       }
 
-      // 3. Central Black Hole with Accretion Disk & Gravitational Lensing
-      s.bhAngle += dt * 0.65 * speedMul;
-      drawBlackHole(w, cx, cy, bhRadius, s.bhAngle);
+      // Bright stars with cross-shaped flares
+      for (const h of s.hero) {
+        const k = 0.5 + 0.5 * Math.sin(t * h.tw + h.ph);
+        w.glow(h.x, h.y, 2.4, h.color, 0.28 * k);
+        w.tile(h.x, h.y, null, '#ffffff', '*', 0.7 + 0.3 * k);
+        const len = k > 0.6 ? 2 : 1;
+        for (let i = 1; i <= len; i++) {
+          const a = (0.75 / i) * k;
+          w.glyph(h.x - i, h.y, '-', h.color, a);
+          w.glyph(h.x + i, h.y, '-', h.color, a);
+          w.glyph(h.x, h.y - i, '|', h.color, a);
+          w.glyph(h.x, h.y + i, '|', h.color, a);
+        }
+      }
 
-      // 4. Meteors (shooting stars)
-      s.nextMeteor -= dt * speedMul;
+      gxSpiral(w, L.gx, L.gy, L.gs, -t * 0.08 * sp);
+
+      // Shooting stars
+      s.nextMeteor -= dt * sp;
       if (s.nextMeteor <= 0) {
         s.meteors.push({
           x: rnd(w.cols * 0.1, w.cols * 0.9),
           y: rnd(-5, w.rows * 0.3),
-          vx: rnd(35, 65) * speedMul,
-          vy: rnd(20, 42) * speedMul,
+          vx: rnd(35, 65),
+          vy: rnd(20, 42),
           len: rint(4, 8),
           life: rnd(0.6, 1.2),
           color: pick(['#ffffff', '#a5f3fc', '#fef08a']),
         });
         s.nextMeteor = rnd(3.0, 7.0);
       }
-
       for (let i = s.meteors.length - 1; i >= 0; i--) {
         const m = s.meteors[i];
         m.life -= dt;
-        m.x += m.vx * dt;
-        m.y += m.vy * dt;
+        m.x += m.vx * dt * sp;
+        m.y += m.vy * dt * sp;
         if (m.life <= 0 || m.x > w.cols + 10 || m.y > w.rows + 10) {
           s.meteors.splice(i, 1);
           continue;
         }
         for (let k = 0; k < m.len; k++) {
-          const tx = m.x - (m.vx / 35) * k * 0.7;
-          const ty = m.y - (m.vy / 20) * k * 0.7;
           const a = clamp((m.life / 0.8) * (1 - k / m.len), 0, 1);
-          const ch = k === 0 ? '*' : k < 3 ? '+' : '~';
-          w.glyph(tx, ty, ch, m.color, a);
+          w.glyph(m.x - (m.vx / 35) * k * 0.7, m.y - (m.vy / 20) * k * 0.7, k === 0 ? '*' : k < 3 ? '+' : '~', m.color, a);
         }
       }
 
-      // 5. Gravitational Lens / Black Hole Mouse Singularity
-      if (hasMouse) {
-        w.glow(mouse.x, mouse.y, 6.0, '#c084fc', 0.45);
-        w.glow(mouse.x, mouse.y, 2.5, '#38bdf8', 0.55);
-        w.tile(mouse.x, mouse.y, '#000000', '#38bdf8', '•', 0.9);
-      }
+      // Black hole: far half of the disk, bent light, shadow, near half of the disk
+      s.ang += dt * 0.65 * sp;
+      s.flash = Math.max(0, s.flash - dt);
+      gxDisk(w, L, s.ang, false);
+      gxArcs(w, L, t);
+      gxHorizon(w, L, t, s.flash);
+      gxDisk(w, L, s.ang, true);
 
-      // 6. Cosmic Dust Simulation (Gravitational Swirl & Vortex)
+      // Cosmic dust: falls into the black hole, swirls around the cursor, gets flung out when it passes too close
+      const damp = Math.pow(0.55, dt);
       for (let i = 0; i < s.dust.length; i++) {
         const p = s.dust[i];
+        const inf = p.far ? 0.45 : 1;
+        let ax = 0;
+        let ay = 0;
 
-        // Cosmic natural drift
-        p.x += p.vx * dt * speedMul;
-        p.y += p.vy * dt * speedMul;
-
-        // Influence of Central Black Hole
-        const bdx = cx - p.x;
-        const bdy = cy - p.y;
-        const bdist = Math.hypot(bdx, bdy);
-        if (bdist < bhRadius * 2.5 && bdist > 0.8) {
-          const pull = (1.5 / (bdist + 1.0)) * dt * speedMul;
-          p.x += bdx * pull - bdy * pull * 1.8;
-          p.y += bdy * pull + bdx * pull * 1.8;
+        const dx = L.bx - p.x;
+        const dy = L.by - p.y;
+        const d2 = dx * dx + dy * dy;
+        const d = Math.sqrt(d2) || 1;
+        if (d < L.R * 0.85) {
+          s.flash = 0.3;
+          s.dust[i] = gxDust(w, false);
+          continue;
+        }
+        if (d < L.R * 7) {
+          const g = (L.R * L.R * 2.2) / (d2 + 2);
+          ax += (dx / d) * g - (dy / d) * g * 1.3;
+          ay += (dy / d) * g + (dx / d) * g * 1.3;
         }
 
-        // --- KEY FEATURE: MOUSE GRAVITATIONAL LENS VORTEX ---
         if (hasMouse) {
-          const mdx = mouse.x - p.x;
-          const mdy = mouse.y - p.y;
-          const mdist = Math.hypot(mdx, mdy);
-          const gravRadius = 22; // tiles
-
-          if (mdist < gravRadius && mdist > 0.4) {
-            const normDist = mdist / gravRadius;
-            const force = (1 - normDist) * 38 * dt * speedMul;
-
-            // Radial attraction (gravity pull)
-            const ux = mdx / mdist;
-            const uy = mdy / mdist;
-
-            // Tangential swirl (vortex spin)
-            const tx = -uy;
-            const ty = ux;
-
-            // Swirl + pull + mouse momentum
-            p.x += (ux * force * 0.75 + tx * force * 1.6) + mouse.vx * 0.4 * dt;
-            p.y += (uy * force * 0.75 + ty * force * 1.6) + mouse.vy * 0.4 * dt;
-
-            // Relativistic excitation: particles shine brighter & change glyph near cursor
-            if (mdist < 7.0) {
-              p.isExcited = true;
-              p.exciteTime = 0.5;
+          const mx = mouse.x - p.x;
+          const my = mouse.y - p.y;
+          const md = Math.hypot(mx, my);
+          if (md < 22 && md > 0.05) {
+            const ux = mx / md;
+            const uy = my / md;
+            const n = 1 - md / 22;
+            const g = (55 * n * n) / (md + 1.2);
+            ax += (ux * 0.9 - uy * 1.6) * g + mouse.vx * 0.6 * n;
+            ay += (uy * 0.9 + ux * 1.6) * g + mouse.vy * 0.6 * n;
+            if (md < 1.4 && p.sl <= 0) {
+              // Gravitational slingshot
+              const v = rnd(16, 26);
+              p.vx = -uy * v - ux * v * 0.35;
+              p.vy = ux * v - uy * v * 0.35;
+              p.sl = 1.2;
+              p.ex = 0.9;
+            } else if (md < 6) {
+              p.ex = Math.max(p.ex, 0.25);
             }
           }
         }
 
-        if (p.exciteTime > 0) {
-          p.exciteTime -= dt;
-          if (p.exciteTime <= 0) p.isExcited = false;
+        p.vx += ax * dt * inf;
+        p.vy += ay * dt * inf;
+        p.vx = p.bvx + (p.vx - p.bvx) * damp;
+        p.vy = p.bvy + (p.vy - p.bvy) * damp;
+        const v = Math.hypot(p.vx, p.vy);
+        if (v > 32) {
+          p.vx *= 32 / v;
+          p.vy *= 32 / v;
         }
+        p.x += p.vx * dt * sp;
+        p.y += p.vy * dt * sp;
+        p.ex -= dt;
+        p.sl -= dt;
 
-        // Respawn if drifted out of bounds
         if (p.x < -8 || p.x > w.cols + 8 || p.y < -8 || p.y > w.rows + 8) {
-          s.dust[i] = spawnCosmicDust(w, false);
+          s.dust[i] = gxDust(w, false);
           continue;
         }
 
-        // Render particle
-        let char = p.ch;
-        let col = p.color;
-        let alpha = p.alpha;
-
-        if (p.isExcited) {
-          char = Math.random() < 0.5 ? '*' : '+';
-          col = pick(['#38bdf8', '#fef08a', '#ffffff', '#ec4899']);
-          alpha = 1.0;
+        if (p.ex > 0) {
+          const hot = p.ex > 0.3;
+          w.glyph(p.x - p.vx * 0.05, p.y - p.vy * 0.05, '·', p.color, 0.5);
+          w.glyph(p.x, p.y, hot ? '*' : '+', hot ? (i % 2 ? '#67e8f9' : '#fde68a') : p.color, 1);
+        } else {
+          w.glyph(p.x, p.y, p.ch, p.color, p.a);
         }
+      }
 
-        w.glyph(p.x, p.y, char, col, alpha);
+      // The cursor: a small singularity with its own spinning ring and a fading trail
+      if (hasMouse) s.trail.push({ x: mouse.x, y: mouse.y, life: 0.6 });
+      if (s.trail.length > 40) s.trail.splice(0, s.trail.length - 40);
+      for (let i = s.trail.length - 1; i >= 0; i--) {
+        const p = s.trail[i];
+        p.life -= dt;
+        if (p.life <= 0) {
+          s.trail.splice(i, 1);
+          continue;
+        }
+        w.glyph(p.x, p.y, '·', '#a78bfa', p.life * 1.1);
+      }
+      if (hasMouse) {
+        w.glow(mouse.x, mouse.y, 7, '#7c3aed', 0.4);
+        w.glow(mouse.x, mouse.y, 3, '#22d3ee', 0.5);
+        for (let k = 0; k < 14; k++) {
+          const a = (k / 14) * Math.PI * 2 + t * 2.4;
+          const sy = Math.sin(a);
+          w.glyph(mouse.x + Math.cos(a) * 2.8, mouse.y + sy * 1.2, sy > 0 ? '*' : '·', sy > 0 ? '#67e8f9' : '#c4b5fd', sy > 0 ? 0.95 : 0.5);
+        }
+        w.tile(mouse.x, mouse.y, '#000000', '#67e8f9', '•', 1);
       }
     },
   });
 
-    const ITEMS = THEMES.map((t) => t.id).concat('off');
+  const ITEMS = THEMES.map((t) => t.id).concat('off');
   const byId = (id) => THEMES.find((t) => t.id === id);
 
   /* --------------------------------------------------------------- settings */

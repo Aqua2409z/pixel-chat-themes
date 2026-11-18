@@ -932,46 +932,79 @@ function galaxy(sc: Scene) {
   sc.def(`<linearGradient id="${skyId}" x1="0" y1="0" x2="${sc.W}" y2="${sc.H}"><stop offset="0" stop-color="#04020a"/><stop offset="0.45" stop-color="#0b061d"/><stop offset="0.8" stop-color="#06091f"/><stop offset="1" stop-color="#02040d"/></linearGradient>`)
   sc.add(`<rect width="${sc.W}" height="${sc.H}" fill="url(#${skyId})"/>`)
 
-  // Nebula clouds
-  sc.add(sc.glow(sc.W * 0.22, sc.H * 0.35, Math.max(sc.W, sc.H) * 0.45, '#8b5cf6', 0.28))
-  sc.add(sc.glow(sc.W * 0.78, sc.H * 0.68, Math.max(sc.W, sc.H) * 0.42, '#06b6d4', 0.22))
-  sc.add(sc.glow(sc.W * 0.62, sc.H * 0.45, Math.max(sc.W, sc.H) * 0.38, '#ec4899', 0.25))
+  // Multi-colored Nebula clouds
+  sc.add(sc.glow(sc.W * 0.2, sc.H * 0.35, Math.max(sc.W, sc.H) * 0.42, '#7c3aed', 0.28))
+  sc.add(sc.glow(sc.W * 0.8, sc.H * 0.72, Math.max(sc.W, sc.H) * 0.4, '#0891b2', 0.24))
+  sc.add(sc.glow(sc.W * 0.48, sc.H * 0.2, Math.max(sc.W, sc.H) * 0.32, '#db2777', 0.2))
 
-  // Black Hole center
-  const bx = r1(sc.W * (sc.cols < 60 ? 0.5 : 0.65))
-  const by = r1(sc.H * 0.44)
-  const br = r1(Math.max(c * 2.5, Math.min(sc.W, sc.H) * 0.1))
+  // Nebula tile clusters
+  const nebTiles: Tile[] = []
+  for (let y = 0; y < sc.rows; y++) {
+    for (let x = 0; x < sc.cols; x++) {
+      const n1 = Math.sin(x * 0.14 + y * 0.18) * Math.cos(x * 0.09 - y * 0.12)
+      if (n1 > 0.48 && sc.rand() < 0.45) {
+        const col = (x + y) % 3 === 0 ? '#a78bfa' : (x + y) % 3 === 1 ? '#f472b6' : '#67e8f9'
+        nebTiles.push([x, y, null, col, sc.pick(['.', '·', ':']), 0.35])
+      }
+    }
+  }
+  sc.add(sc.tiles(nebTiles))
 
-  // Central amber aura around black hole
-  sc.add(sc.glow(bx, by, br * 3.5, '#f59e0b', 0.45))
-  sc.add(sc.glow(bx, by, br * 2.0, '#ec4899', 0.4))
-
-  // Accretion disk spinning (SMIL animated rotation)
-  const diskR1 = br * 2.8
-  const diskR2 = br * 0.75
+  // Distant Spiral Galaxy (top-left)
+  const gx = r1(sc.W * 0.22)
+  const gy = r1(sc.H * 0.24)
+  const gs = r1(Math.max(c * 2, Math.min(sc.W, sc.H) * 0.07))
+  sc.add(sc.glow(gx, gy, gs * 2.2, '#c4b5fd', 0.32))
   sc.add(
-    `<g>` +
-      `<ellipse cx="${bx}" cy="${by}" rx="${r1(diskR1)}" ry="${r1(diskR2)}" fill="none" stroke="#f97316" stroke-width="${r1(c * 1.4)}" opacity="0.85">` +
-        `<animateTransform attributeName="transform" type="rotate" from="0 ${bx} ${by}" to="360 ${bx} ${by}" dur="20s" repeatCount="indefinite"/>` +
-      `</ellipse>` +
-      `<ellipse cx="${bx}" cy="${by}" rx="${r1(diskR1 * 1.3)}" ry="${r1(diskR2 * 1.25)}" fill="none" stroke="#db2777" stroke-width="${r1(c * 1.0)}" stroke-dasharray="14,10" opacity="0.75">` +
-        `<animateTransform attributeName="transform" type="rotate" from="360 ${bx} ${by}" to="0 ${bx} ${by}" dur="28s" repeatCount="indefinite"/>` +
-      `</ellipse>` +
+    `<g opacity="0.85">` +
+      `<ellipse cx="${gx}" cy="${gy}" rx="${r1(gs * 1.8)}" ry="${r1(gs * 0.65)}" fill="none" stroke="#c4b5fd" stroke-width="${r1(c * 0.5)}" stroke-dasharray="6,4" transform="rotate(-18 ${gx} ${gy})"/>` +
+      `<circle cx="${gx}" cy="${gy}" r="${r1(c * 0.6)}" fill="#fef3c7"/>` +
     `</g>`
   )
 
-  // Gravitational lensing upper and lower arcs (Einstein ring bending over top)
+  // Ringed Ice Giant Planet (bottom-left)
+  const px = r1(sc.W * 0.14)
+  const py = r1(sc.H * 0.78)
+  const pr = r1(Math.max(c * 2.2, Math.min(sc.W, sc.H) * 0.09))
+  sc.add(sc.glow(px, py, pr * 2.2, '#6366f1', 0.3))
   sc.add(
-    `<path d="M ${r1(bx - br * 2.0)} ${r1(by)} A ${r1(br * 2.0)} ${r1(br * 1.7)} 0 0 1 ${r1(bx + br * 2.0)} ${r1(by)}" fill="none" stroke="#fbbf24" stroke-width="${r1(c * 1.1)}" opacity="0.85"/>` +
-    `<path d="M ${r1(bx - br * 1.7)} ${r1(by)} A ${r1(br * 1.7)} ${r1(br * 1.2)} 0 0 0 ${r1(bx + br * 1.7)} ${r1(by)}" fill="none" stroke="#ea580c" stroke-width="${r1(c * 0.9)}" opacity="0.75"/>`
+    `<g transform="rotate(-14 ${px} ${py})">` +
+      `<ellipse cx="${px}" cy="${py}" rx="${r1(pr * 2.2)}" ry="${r1(pr * 0.55)}" fill="none" stroke="#a5b4fc" stroke-width="${r1(c * 0.7)}" opacity="0.65"/>` +
+      `<circle cx="${px}" cy="${py}" r="${pr}" fill="#4338ca"/>` +
+      `<path d="M ${r1(px - pr * 2.2)} ${py} A ${r1(pr * 2.2)} ${r1(pr * 0.55)} 0 0 0 ${r1(px + pr * 2.2)} ${py}" fill="none" stroke="#e0e7ff" stroke-width="${r1(c * 0.85)}" opacity="0.9"/>` +
+    `</g>`
   )
 
-  // Central Event Horizon
-  sc.add(`<circle cx="${bx}" cy="${by}" r="${r1(br)}" fill="#000000"/>`)
-  sc.add(`<circle cx="${bx}" cy="${by}" r="${r1(br * 1.08)}" stroke="#ffffff" stroke-width="${r1(c * 0.6)}" fill="none" opacity="0.95"/>`)
+  // Black Hole center (3D layered Gargantua)
+  const bx = r1(sc.W * (sc.cols < 60 ? 0.52 : 0.64))
+  const by = r1(sc.H * 0.44)
+  const br = r1(Math.max(c * 2.5, Math.min(sc.W, sc.H) * 0.105))
+  const diskRx = r1(br * 3.0)
+  const diskRy = r1(br * 0.65)
 
-  // Twinkling stars
-  const starCount = Math.max(25, Math.min(60, Math.round((sc.cols * sc.rows) / 80)))
+  // Central amber & rose aura around black hole
+  sc.add(sc.glow(bx, by, br * 4.2, '#f59e0b', 0.38))
+  sc.add(sc.glow(bx, by, br * 2.4, '#ec4899', 0.42))
+
+  // 1. Back half of accretion disk + Gravitational Lensing Upper/Lower Arcs
+  sc.add(
+    `<path d="M ${r1(bx - diskRx)} ${by} A ${diskRx} ${diskRy} 0 0 1 ${r1(bx + diskRx)} ${by}" fill="none" stroke="#f97316" stroke-width="${r1(c * 1.4)}" opacity="0.8"/>` +
+    `<path d="M ${r1(bx - br * 1.85)} ${by} A ${r1(br * 1.85)} ${r1(br * 1.55)} 0 0 1 ${r1(bx + br * 1.85)} ${by}" fill="none" stroke="#fbbf24" stroke-width="${r1(c * 1.15)}" opacity="0.9"/>` +
+    `<path d="M ${r1(bx - br * 1.7)} ${by} A ${r1(br * 1.7)} ${r1(br * 1.25)} 0 0 0 ${r1(bx + br * 1.7)} ${by}" fill="none" stroke="#ea580c" stroke-width="${r1(c * 0.9)}" opacity="0.78"/>`
+  )
+
+  // 2. Central Event Horizon & Photon Sphere
+  sc.add(`<circle cx="${bx}" cy="${by}" r="${r1(br)}" fill="#000000"/>`)
+  sc.add(`<circle cx="${bx}" cy="${by}" r="${r1(br * 1.06)}" stroke="#fef08a" stroke-width="${r1(c * 0.55)}" fill="none" opacity="0.95"/>`)
+
+  // 3. Front half of accretion disk (passes IN FRONT of the Event Horizon!)
+  sc.add(
+    `<path d="M ${r1(bx - diskRx * 1.15)} ${by} A ${r1(diskRx * 1.15)} ${r1(diskRy * 1.15)} 0 0 0 ${r1(bx + diskRx * 1.15)} ${by}" fill="none" stroke="#db2777" stroke-width="${r1(c * 1.1)}" stroke-dasharray="16,8" opacity="0.8"/>` +
+    `<path d="M ${r1(bx - diskRx)} ${by} A ${diskRx} ${diskRy} 0 0 0 ${r1(bx + diskRx)} ${by}" fill="none" stroke="#fde68a" stroke-width="${r1(c * 1.3)}" opacity="0.95"/>`
+  )
+
+  // Twinkling stars & Cross-flare Hero Stars
+  const starCount = Math.max(28, Math.min(65, Math.round((sc.cols * sc.rows) / 75)))
   const starCols = ['#ffffff', '#fef08a', '#a5f3fc', '#fbcfe8', '#c7d2fe']
   for (let k = 0; k < starCount; k++) {
     const sx = r1(sc.rnd(0, sc.W))
@@ -981,7 +1014,7 @@ function galaxy(sc: Scene) {
     const col = sc.pick(starCols)
     const ch = sc.pick(['.', '+', '*', '·'])
     sc.add(
-      `<g opacity="0.8"><animate attributeName="opacity" values="0.2;1.0;0.2" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+      `<g opacity="0.85"><animate attributeName="opacity" values="0.2;1.0;0.2" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
         `<text fill="${col}" x="${sx}" y="${sy}">${ch}</text>` +
       `</g>`
     )
