@@ -28,6 +28,7 @@ export const THEMES: Theme[] = [
   { id: 'moon', name: 'Moonlit', desc: 'trăng, sao, sao băng', dark: true, alias: ['trang', 'dem', 'night'], accent: '#8f9cff', bubble: '#8f9cff22' },
   { id: 'vn', name: 'Việt Nam', desc: 'cờ đỏ sao vàng tung bay', dark: false, alias: ['co', 'co do', 'co viet nam', 'co do sao vang', 'viet nam', 'vietnam', 'quoc ky', 'to quoc', 'flag'], accent: '#da251d', bubble: '#da251d22' },
   { id: 'sakura', name: 'Sakura Breeze', desc: 'núi Phú Sĩ, cổng Torii, hoa anh đào', dark: false, alias: ['sakura', 'hoa', 'anhdao', 'cherry', 'japan', 'fuji', 'phu si', 'torii'], accent: '#f472b6', bubble: '#f472b622' },
+  { id: 'galaxy', name: 'Cosmic Galaxy', desc: 'hố đen vô cực, tinh vân, bụi sao', dark: true, alias: ['galaxy', 'vu tru', 'vutru', 'ngan ha', 'nganha', 'blackhole', 'space', 'sao', 'nebula', 'cosmos'], accent: '#c084fc', bubble: '#c084fc22' },
 ]
 
 export const byId = (id: string): Theme | undefined => THEMES.find(t => t.id === id)
@@ -924,6 +925,85 @@ function sakura(sc: Scene) {
   }
 }
 
+
+function galaxy(sc: Scene) {
+  const c = sc.cell
+  const skyId = sc.id('space')
+  sc.def(`<linearGradient id="${skyId}" x1="0" y1="0" x2="${sc.W}" y2="${sc.H}"><stop offset="0" stop-color="#04020a"/><stop offset="0.45" stop-color="#0b061d"/><stop offset="0.8" stop-color="#06091f"/><stop offset="1" stop-color="#02040d"/></linearGradient>`)
+  sc.add(`<rect width="${sc.W}" height="${sc.H}" fill="url(#${skyId})"/>`)
+
+  // Nebula clouds
+  sc.add(sc.glow(sc.W * 0.22, sc.H * 0.35, Math.max(sc.W, sc.H) * 0.45, '#8b5cf6', 0.28))
+  sc.add(sc.glow(sc.W * 0.78, sc.H * 0.68, Math.max(sc.W, sc.H) * 0.42, '#06b6d4', 0.22))
+  sc.add(sc.glow(sc.W * 0.62, sc.H * 0.45, Math.max(sc.W, sc.H) * 0.38, '#ec4899', 0.25))
+
+  // Black Hole center
+  const bx = r1(sc.W * (sc.cols < 60 ? 0.5 : 0.65))
+  const by = r1(sc.H * 0.44)
+  const br = r1(Math.max(c * 2.5, Math.min(sc.W, sc.H) * 0.1))
+
+  // Central amber aura around black hole
+  sc.add(sc.glow(bx, by, br * 3.5, '#f59e0b', 0.45))
+  sc.add(sc.glow(bx, by, br * 2.0, '#ec4899', 0.4))
+
+  // Accretion disk spinning (SMIL animated rotation)
+  const diskR1 = br * 2.8
+  const diskR2 = br * 0.75
+  sc.add(
+    `<g>` +
+      `<ellipse cx="${bx}" cy="${by}" rx="${r1(diskR1)}" ry="${r1(diskR2)}" fill="none" stroke="#f97316" stroke-width="${r1(c * 1.4)}" opacity="0.85">` +
+        `<animateTransform attributeName="transform" type="rotate" from="0 ${bx} ${by}" to="360 ${bx} ${by}" dur="20s" repeatCount="indefinite"/>` +
+      `</ellipse>` +
+      `<ellipse cx="${bx}" cy="${by}" rx="${r1(diskR1 * 1.3)}" ry="${r1(diskR2 * 1.25)}" fill="none" stroke="#db2777" stroke-width="${r1(c * 1.0)}" stroke-dasharray="14,10" opacity="0.75">` +
+        `<animateTransform attributeName="transform" type="rotate" from="360 ${bx} ${by}" to="0 ${bx} ${by}" dur="28s" repeatCount="indefinite"/>` +
+      `</ellipse>` +
+    `</g>`
+  )
+
+  // Gravitational lensing upper and lower arcs (Einstein ring bending over top)
+  sc.add(
+    `<path d="M ${r1(bx - br * 2.0)} ${r1(by)} A ${r1(br * 2.0)} ${r1(br * 1.7)} 0 0 1 ${r1(bx + br * 2.0)} ${r1(by)}" fill="none" stroke="#fbbf24" stroke-width="${r1(c * 1.1)}" opacity="0.85"/>` +
+    `<path d="M ${r1(bx - br * 1.7)} ${r1(by)} A ${r1(br * 1.7)} ${r1(br * 1.2)} 0 0 0 ${r1(bx + br * 1.7)} ${r1(by)}" fill="none" stroke="#ea580c" stroke-width="${r1(c * 0.9)}" opacity="0.75"/>`
+  )
+
+  // Central Event Horizon
+  sc.add(`<circle cx="${bx}" cy="${by}" r="${r1(br)}" fill="#000000"/>`)
+  sc.add(`<circle cx="${bx}" cy="${by}" r="${r1(br * 1.08)}" stroke="#ffffff" stroke-width="${r1(c * 0.6)}" fill="none" opacity="0.95"/>`)
+
+  // Twinkling stars
+  const starCount = Math.max(25, Math.min(60, Math.round((sc.cols * sc.rows) / 80)))
+  const starCols = ['#ffffff', '#fef08a', '#a5f3fc', '#fbcfe8', '#c7d2fe']
+  for (let k = 0; k < starCount; k++) {
+    const sx = r1(sc.rnd(0, sc.W))
+    const sy = r1(sc.rnd(0, sc.H))
+    const dur = r1(sc.rnd(1.8, 4.5))
+    const begin = r1(sc.rnd(0, 4.5))
+    const col = sc.pick(starCols)
+    const ch = sc.pick(['.', '+', '*', '·'])
+    sc.add(
+      `<g opacity="0.8"><animate attributeName="opacity" values="0.2;1.0;0.2" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+        `<text fill="${col}" x="${sx}" y="${sy}">${ch}</text>` +
+      `</g>`
+    )
+  }
+
+  // Shooting stars
+  for (let m = 0; m < 2; m++) {
+    const mx0 = r1(sc.rnd(sc.W * 0.1, sc.W * 0.7))
+    const my0 = r1(sc.rnd(0, sc.H * 0.3))
+    const dur = r1(sc.rnd(5.0, 9.0))
+    const begin = r1(sc.rnd(0, 9.0))
+    sc.add(
+      `<g opacity="0.9">` +
+        `<animateTransform attributeName="transform" type="translate" from="${mx0} ${my0}" to="${r1(mx0 + sc.W * 0.45)} ${r1(my0 + sc.H * 0.4)}" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+        `<text fill="#ffffff" x="0" y="0">*</text>` +
+        `<text fill="#38bdf8" x="-6" y="-3">~</text>` +
+        `<text fill="#818cf8" x="-12" y="-6">-</text>` +
+      `</g>`
+    )
+  }
+}
+
 /* ----------------------------------------------------------------- entry */
 
 const BUILDERS: Record<string, [glyphs: string, draw: (sc: Scene) => void]> = {
@@ -937,6 +1017,7 @@ const BUILDERS: Record<string, [glyphs: string, draw: (sc: Scene) => void]> = {
   moon: ['+*.:', moon],
   vn: [':.;', vn],
   sakura: ['*+:.o~°', sakura],
+  galaxy: ['·*+°~%#@', galaxy],
 }
 
 const SIZES: Record<Layout, [w: number, h: number, cell: number]> = {

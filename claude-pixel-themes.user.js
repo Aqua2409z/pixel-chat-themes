@@ -2,7 +2,7 @@
 // @name         Pixel Chat Themes
 // @name:vi      Pixel Chat Themes – hình nền pixel cho claude.ai
 // @namespace    https://github.com/aqua2409z/pixel-chat-themes
-// @version      1.3.0
+// @version      1.4.0
 // @description  Animated pixel/ASCII wallpapers behind the claude.ai chat. Type /theme to pick one.
 // @description:vi Hình nền pixel/ASCII chuyển động phía sau khung chat claude.ai. Gõ /theme để chọn.
 // @author       aqua2409z
@@ -1439,7 +1439,286 @@
     },
   });
 
-  const ITEMS = THEMES.map((t) => t.id).concat('off');
+
+  /* ----------------------------------------------------------------- galaxy */
+
+  function spawnCosmicDust(w, initial) {
+    const isFar = Math.random() < 0.6;
+    return {
+      x: initial ? Math.random() * w.cols : (Math.random() < 0.5 ? -2 : w.cols + 2),
+      y: Math.random() * w.rows,
+      vx: rnd(-0.5, 0.5),
+      vy: rnd(-0.35, 0.35),
+      ch: pick(['·', '°', '*', '+', '~', '%']),
+      color: pick(['#a855f7', '#ec4899', '#06b6d4', '#60a5fa', '#fde047', '#e2e8f0']),
+      alpha: isFar ? rnd(0.3, 0.65) : rnd(0.7, 0.95),
+      isFar,
+      isExcited: false,
+      exciteTime: 0,
+    };
+  }
+
+  function drawBlackHole(w, cx, cy, R, angle) {
+    const rx = R * 2.8;
+    const ry = R * 0.72;
+
+    // 1. Accretion Disk (Swirling plasma disk around event horizon)
+    for (let dx = -Math.ceil(rx); dx <= Math.ceil(rx); dx++) {
+      const u = dx / rx;
+      if (Math.abs(u) > 1) continue;
+      const spanY = ry * Math.sqrt(1 - u * u);
+      const x = cx + dx;
+
+      for (let dy = -Math.ceil(spanY); dy <= Math.ceil(spanY); dy++) {
+        const y = cy + dy;
+        const distFromCenter = Math.hypot(dx, dy * 2.8);
+        if (distFromCenter < R * 0.92) continue; // inside event horizon
+
+        const rNorm = (distFromCenter - R * 0.92) / (rx - R * 0.92);
+        const theta = Math.atan2(dy, dx);
+        const swirl = Math.sin(theta * 2.0 + angle * 3.5 - rNorm * 4.0);
+
+        let bg = null;
+        let fg = '#f59e0b';
+        let ch = swirl > 0.3 ? '#' : swirl < -0.3 ? '%' : '*';
+        let a = clamp(1.0 - rNorm * 0.5, 0.4, 0.95);
+
+        if (rNorm < 0.22) {
+          fg = '#ffffff';
+          bg = '#fef08a';
+          ch = '*';
+          a = 1.0;
+        } else if (rNorm < 0.52) {
+          fg = '#fbbf24';
+          bg = '#ea580c';
+        } else if (rNorm < 0.78) {
+          fg = '#f43f5e';
+        } else {
+          fg = '#7c3aed';
+          ch = '.';
+        }
+
+        w.tile(x, y, bg, fg, ch, a);
+      }
+    }
+
+    // 2. Gravitational Lensing Arcs (Light bent over the top and beneath)
+    const arcSpan = Math.ceil(R * 1.95);
+    for (let dx = -arcSpan; dx <= arcSpan; dx++) {
+      const u = dx / (R * 1.95);
+      if (Math.abs(u) > 1) continue;
+      const arcH = Math.sqrt(1 - u * u) * (R * 0.78);
+
+      const upperY = Math.round(cy - R * 0.95 - arcH);
+      const lowerY = Math.round(cy + R * 0.95 + arcH);
+      const x = cx + dx;
+
+      const flare = Math.sin(angle * 2.0 + dx * 0.45);
+      const col = flare > 0 ? '#fbbf24' : '#f97316';
+      w.tile(x, upperY, '#ea580c', '#ffffff', '*', 0.88);
+      w.tile(x, lowerY, null, col, '~', 0.72);
+    }
+
+    // 3. Event Horizon (Absolute Void at core)
+    for (let dy = -Math.ceil(R); dy <= Math.ceil(R); dy++) {
+      for (let dx = -Math.ceil(R * 1.15); dx <= Math.ceil(R * 1.15); dx++) {
+        const d = Math.hypot(dx / 1.15, dy);
+        if (d <= R) {
+          w.tile(cx + dx, cy + dy, '#000000', '#000000', ' ', 1.0);
+        } else if (d <= R + 0.85) {
+          // Photon ring
+          const col = Math.random() < 0.4 ? '#ffffff' : '#fef08a';
+          w.tile(cx + dx, cy + dy, '#f59e0b', col, '*', 0.95);
+        }
+      }
+    }
+  }
+
+  THEMES.push({
+    id: 'galaxy',
+    name: 'Cosmic Galaxy',
+    dark: true,
+    alias: ['galaxy', 'vu tru', 'vutru', 'ngan ha', 'nganha', 'blackhole', 'space', 'sao', 'nebula', 'cosmos'],
+    glyphs: '·*+°~%#@',
+    bg(c, w, h) {
+      const g = c.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, '#04020a');
+      g.addColorStop(0.45, '#0b061d');
+      g.addColorStop(0.8, '#06091f');
+      g.addColorStop(1, '#02040d');
+      c.fillStyle = g;
+      c.fillRect(0, 0, w, h);
+    },
+    init(w) {
+      const density = cfg.density || 1.0;
+      const starCount = Math.round(clamp((w.cols * w.rows) / 12, 60, 160) * density);
+      const dustCount = Math.round(clamp((w.cols * w.rows) / 8, 80, 220) * density);
+
+      const stars = Array.from({ length: starCount }, () => ({
+        x: Math.random() * w.cols,
+        y: Math.random() * w.rows,
+        twinkleSpeed: rnd(0.8, 3.2),
+        phase: Math.random() * Math.PI * 2,
+        color: pick(['#ffffff', '#e0e7ff', '#c7d2fe', '#fef08a', '#a5f3fc', '#fbcfe8']),
+        ch: pick(['.', '·', '+', '*']),
+        baseAlpha: rnd(0.25, 0.85),
+      }));
+
+      const dust = Array.from({ length: dustCount }, () => spawnCosmicDust(w, true));
+
+      w.s = {
+        stars,
+        dust,
+        meteors: [],
+        nextMeteor: rnd(2.0, 5.0),
+        bhAngle: 0,
+      };
+    },
+    frame(w, dt) {
+      const s = w.s;
+      const t = w.t;
+      const speedMul = cfg.speed || 1.0;
+      const mouse = w.mouse;
+      const hasMouse = mouse && mouse.active;
+
+      // 1. Nebula clouds & cosmic ambient glow
+      const cx = Math.round(w.cols * (w.cols < 60 ? 0.5 : 0.65));
+      const cy = Math.round(w.rows * 0.44);
+      const bhRadius = clamp(Math.round(Math.min(w.cols, w.rows) * 0.08), 4, 8);
+
+      w.glow(cx, cy, bhRadius * 4.2, '#f59e0b', 0.28);
+      w.glow(cx, cy, bhRadius * 2.5, '#ec4899', 0.35);
+      w.glow(w.cols * 0.22, w.rows * 0.32, Math.max(w.cols, w.rows) * 0.35, '#8b5cf6', 0.18);
+      w.glow(w.cols * 0.78, w.rows * 0.72, Math.max(w.cols, w.rows) * 0.38, '#06b6d4', 0.16);
+
+      // 2. Stars twinkling
+      for (let i = 0; i < s.stars.length; i++) {
+        const star = s.stars[i];
+        const alpha = clamp(star.baseAlpha + Math.sin(t * star.twinkleSpeed + star.phase) * 0.35, 0.1, 1.0);
+        w.glyph(star.x, star.y, star.ch, star.color, alpha);
+      }
+
+      // 3. Central Black Hole with Accretion Disk & Gravitational Lensing
+      s.bhAngle += dt * 0.65 * speedMul;
+      drawBlackHole(w, cx, cy, bhRadius, s.bhAngle);
+
+      // 4. Meteors (shooting stars)
+      s.nextMeteor -= dt * speedMul;
+      if (s.nextMeteor <= 0) {
+        s.meteors.push({
+          x: rnd(w.cols * 0.1, w.cols * 0.9),
+          y: rnd(-5, w.rows * 0.3),
+          vx: rnd(35, 65) * speedMul,
+          vy: rnd(20, 42) * speedMul,
+          len: rint(4, 8),
+          life: rnd(0.6, 1.2),
+          color: pick(['#ffffff', '#a5f3fc', '#fef08a']),
+        });
+        s.nextMeteor = rnd(3.0, 7.0);
+      }
+
+      for (let i = s.meteors.length - 1; i >= 0; i--) {
+        const m = s.meteors[i];
+        m.life -= dt;
+        m.x += m.vx * dt;
+        m.y += m.vy * dt;
+        if (m.life <= 0 || m.x > w.cols + 10 || m.y > w.rows + 10) {
+          s.meteors.splice(i, 1);
+          continue;
+        }
+        for (let k = 0; k < m.len; k++) {
+          const tx = m.x - (m.vx / 35) * k * 0.7;
+          const ty = m.y - (m.vy / 20) * k * 0.7;
+          const a = clamp((m.life / 0.8) * (1 - k / m.len), 0, 1);
+          const ch = k === 0 ? '*' : k < 3 ? '+' : '~';
+          w.glyph(tx, ty, ch, m.color, a);
+        }
+      }
+
+      // 5. Gravitational Lens / Black Hole Mouse Singularity
+      if (hasMouse) {
+        w.glow(mouse.x, mouse.y, 6.0, '#c084fc', 0.45);
+        w.glow(mouse.x, mouse.y, 2.5, '#38bdf8', 0.55);
+        w.tile(mouse.x, mouse.y, '#000000', '#38bdf8', '•', 0.9);
+      }
+
+      // 6. Cosmic Dust Simulation (Gravitational Swirl & Vortex)
+      for (let i = 0; i < s.dust.length; i++) {
+        const p = s.dust[i];
+
+        // Cosmic natural drift
+        p.x += p.vx * dt * speedMul;
+        p.y += p.vy * dt * speedMul;
+
+        // Influence of Central Black Hole
+        const bdx = cx - p.x;
+        const bdy = cy - p.y;
+        const bdist = Math.hypot(bdx, bdy);
+        if (bdist < bhRadius * 2.5 && bdist > 0.8) {
+          const pull = (1.5 / (bdist + 1.0)) * dt * speedMul;
+          p.x += bdx * pull - bdy * pull * 1.8;
+          p.y += bdy * pull + bdx * pull * 1.8;
+        }
+
+        // --- KEY FEATURE: MOUSE GRAVITATIONAL LENS VORTEX ---
+        if (hasMouse) {
+          const mdx = mouse.x - p.x;
+          const mdy = mouse.y - p.y;
+          const mdist = Math.hypot(mdx, mdy);
+          const gravRadius = 22; // tiles
+
+          if (mdist < gravRadius && mdist > 0.4) {
+            const normDist = mdist / gravRadius;
+            const force = (1 - normDist) * 38 * dt * speedMul;
+
+            // Radial attraction (gravity pull)
+            const ux = mdx / mdist;
+            const uy = mdy / mdist;
+
+            // Tangential swirl (vortex spin)
+            const tx = -uy;
+            const ty = ux;
+
+            // Swirl + pull + mouse momentum
+            p.x += (ux * force * 0.75 + tx * force * 1.6) + mouse.vx * 0.4 * dt;
+            p.y += (uy * force * 0.75 + ty * force * 1.6) + mouse.vy * 0.4 * dt;
+
+            // Relativistic excitation: particles shine brighter & change glyph near cursor
+            if (mdist < 7.0) {
+              p.isExcited = true;
+              p.exciteTime = 0.5;
+            }
+          }
+        }
+
+        if (p.exciteTime > 0) {
+          p.exciteTime -= dt;
+          if (p.exciteTime <= 0) p.isExcited = false;
+        }
+
+        // Respawn if drifted out of bounds
+        if (p.x < -8 || p.x > w.cols + 8 || p.y < -8 || p.y > w.rows + 8) {
+          s.dust[i] = spawnCosmicDust(w, false);
+          continue;
+        }
+
+        // Render particle
+        let char = p.ch;
+        let col = p.color;
+        let alpha = p.alpha;
+
+        if (p.isExcited) {
+          char = Math.random() < 0.5 ? '*' : '+';
+          col = pick(['#38bdf8', '#fef08a', '#ffffff', '#ec4899']);
+          alpha = 1.0;
+        }
+
+        w.glyph(p.x, p.y, char, col, alpha);
+      }
+    },
+  });
+
+    const ITEMS = THEMES.map((t) => t.id).concat('off');
   const byId = (id) => THEMES.find((t) => t.id === id);
 
   /* --------------------------------------------------------------- settings */
