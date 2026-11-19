@@ -1497,7 +1497,7 @@
     branch: nxHex('#2a2129'),
     gold: nxHex('#ffd34d'),
   };
-  const NX_BULBS = ['#fff1c4', '#ffe9a8', '#ffe9a8', '#ffd34d', '#ffd34d', '#ff6a4f', '#7fd0ff'];
+  const NX_BULBS = ['#fff1c4', '#ffe9a8', '#ffe9a8', '#ffd34d', '#ffd34d', '#ffc861'];
 
   // Paints the still scene into a PW x PH pixel buffer and records where the
   // lights are, so the frame can make them twinkle.
@@ -1730,6 +1730,57 @@
         }
       }
     };
+
+    // A snowman in the foreground: three snowballs with blue shade, coal eyes and
+    // buttons, a carrot nose, a red scarf, a top hat and stick arms.
+    const snowman = (cx, gy, size) => {
+      const r1 = size * 0.32;
+      const r2 = size * 0.23;
+      const r3 = size * 0.16;
+      const balls = [
+        [gy - r1, r1],
+        [gy - r1 * 2 - r2 * 0.75, r2],
+        [gy - r1 * 2 - r2 * 1.5 - r3 * 0.75, r3],
+      ];
+      for (let y = Math.floor(gy - size * 1.4); y <= gy + 1; y++) {
+        for (let x = Math.floor(cx - r1 - 1); x <= cx + r1 + 1; x++) {
+          for (const [by, br] of balls) {
+            const d = Math.hypot(x - cx, y - by);
+            if (d > br) continue;
+            const u = (x - cx) / br + (y - by) / br * 0.4;
+            put(x, y, d > br - 1 ? NX.snowDeep : u > 0.35 || (u > 0.15 && nxB(x, y) < (u - 0.15) * 5) ? NX.snowShade : NX.snow);
+          }
+        }
+      }
+      // Shadow on the snow.
+      for (let x = Math.floor(cx - r1 * 1.2); x <= cx + r1 * 1.6; x++) put(x, gy + 1, NX.snowShade);
+      const [hy, hr] = balls[2];
+      const coal = nxHex('#1d1a22');
+      put(cx - hr * 0.4, hy - hr * 0.2, coal);
+      put(cx + hr * 0.3, hy - hr * 0.2, coal);
+      const carrot = nxHex('#f08a24');
+      for (let k = 0; k < Math.max(2, hr * 0.7); k++) put(cx + 1 + k, hy + hr * 0.1, carrot);
+      for (let k = -2; k <= 1; k++) put(cx + k, hy + hr * 0.55, coal, k % 2 ? 1 : 0.6);
+      // Hat.
+      const hatW = Math.max(3, hr * 1.1);
+      for (let x = Math.floor(cx - hatW); x <= cx + hatW; x++) put(x, hy - hr * 0.8, coal);
+      for (let y = Math.floor(hy - hr * 0.8 - hr * 1.1); y < hy - hr * 0.8; y++) for (let x = Math.floor(cx - hatW * 0.65); x <= cx + hatW * 0.65; x++) put(x, y, coal);
+      for (let x = Math.floor(cx - hatW * 0.65); x <= cx + hatW * 0.65; x++) put(x, hy - hr * 0.8 - 2, nxHex('#c8323a'));
+      // Scarf.
+      const [my, mr] = balls[1];
+      const scarf = nxHex('#d23a3a');
+      for (let x = Math.floor(cx - mr * 0.8); x <= cx + mr * 0.8; x++) { put(x, my - mr * 0.85, scarf); put(x, my - mr * 0.85 + 1, scarf); }
+      for (let k = 0; k < mr * 0.9; k++) put(cx + mr * 0.45 + (k > mr * 0.5 ? 1 : 0), my - mr * 0.85 + 2 + k, scarf);
+      for (let k = 0; k < 3; k++) put(cx, my - mr * 0.3 + k * mr * 0.35, coal);
+      // Stick arms.
+      const stick = nxHex('#4a3020');
+      for (let k = 0; k < mr * 1.4; k++) {
+        put(cx - mr - k, my - k * 0.55, stick);
+        put(cx + mr + k, my - k * 0.6, stick);
+      }
+      put(cx - mr - mr * 1.2, my - mr * 0.9, stick);
+      put(cx + mr + mr * 1.2, my - mr * 1.0, stick);
+    };
     const gl = (x) => Math.round(ground(x));
     if (wide) {
       pool(PW * 0.28, gl(PW * 0.28) + PH * 0.04, PW * 0.08, PH * 0.06, 0.8);
@@ -1743,6 +1794,7 @@
       lantern(Math.round(PW * 0.28), gl(PW * 0.28), Math.round(PH * 0.2));
       lantern(Math.round(PW * 0.56), gl(PW * 0.56), Math.round(PH * 0.17));
       const tr = tree(PW * 0.85, gl(PW * 0.85) + 2, PH * 0.5);
+      snowman(PW * 0.31, PH * 0.95, PH * 0.17);
       branch(-2, PH * 0.02, 0.35, PW * 0.32, Math.max(3, PH * 0.025), 0);
       branch(-2, PH * 0.12, 0.15, PW * 0.22, Math.max(2, PH * 0.018), 1);
       branch(PW + 2, PH * 0.02, Math.PI - 0.25, PW * 0.2, Math.max(3, PH * 0.022), 0);
@@ -1753,8 +1805,44 @@
     house(Math.round(PW * 0.04), Math.round(Math.min(PW * 0.3, PH * 0.55)), Math.round(PH * 0.11));
     lantern(Math.round(PW * 0.42), gl(PW * 0.42), Math.round(PH * 0.14));
     const tr = tree(PW * 0.72, gl(PW * 0.72) + 2, PH * 0.38);
+    snowman(PW * 0.24, PH * 0.94, PH * 0.13);
     branch(-2, PH * 0.02, 0.45, PW * 0.5, Math.max(2, PH * 0.015), 1);
     return { img, lights, glows, star: tr };
+  }
+
+  // Santa's sleigh pulled by three reindeer, facing right; Rudolph leads.
+  // Two leg poses alternate so the reindeer gallop.
+  const NX_DEER = [
+    ['.....A.A', '......AH', 'BBBBBBHN', 'BBBBBB..', 'B..B.B..'],
+    ['.....A.A', '......AH', 'BBBBBBHN', 'BBBBBB..', '.BB..BB.'],
+  ];
+  const NX_SLEIGH = ['...RRW......', '..RRRR......', '..WKKW......', 'S.RRRR..S...', 'SSSSSSSSSS..', '.GGGGGGGGGG.', 'G..........G'];
+  const NX_SANTA_PAL = {
+    R: '#d23a3a', W: '#f6f6f6', K: '#f2c9a0', S: '#b52828', G: '#e8b84a',
+    B: '#7a4a2a', H: '#7a4a2a', A: '#c9a477', N: '#5a3a24',
+  };
+  function nxSanta(c, P, x0, y0, s, frame, rudolph) {
+    const px = (x, y, col) => {
+      c.fillStyle = col;
+      c.fillRect(Math.round(x0 + x * s) * P, Math.round(y0 + y * s) * P, s * P, s * P);
+    };
+    NX_SLEIGH.forEach((row, j) => {
+      for (let i = 0; i < row.length; i++) if (NX_SANTA_PAL[row[i]]) px(i, j, NX_SANTA_PAL[row[i]]);
+    });
+    for (let k = 0; k < 3; k++) {
+      const dx = 13 + k * 9;
+      const dy = -2 - k * 0.5;
+      const rows = NX_DEER[(frame + k) % 2];
+      rows.forEach((row, j) => {
+        for (let i = 0; i < row.length; i++) {
+          const ch = row[i];
+          if (!NX_SANTA_PAL[ch]) continue;
+          px(dx + i, dy + j, ch === 'N' && k === 2 && rudolph ? '#ff3b30' : NX_SANTA_PAL[ch]);
+        }
+      });
+    }
+    // Reins from the sleigh to the lead reindeer.
+    for (let i = 10; i < 13 + 2 * 9 + 6; i++) px(i, 2.5 - (i - 10) * 0.12, '#c9a477');
   }
 
   THEMES.push({
@@ -1783,7 +1871,8 @@
       s.PH = Math.ceil(w.h / s.P);
       s.seed = rint(1, 9999);
       s.art = nxPaint(s.PW, s.PH, s.seed, s.PW >= 180);
-      const n = Math.round(clamp((s.PW * s.PH) / 140, 20, 900) * (cfg.density || 1));
+      const n = Math.round(clamp((s.PW * s.PH) / 60, 40, 2000) * (cfg.density || 1));
+      s.santa = { x: -45 * Math.max(1, Math.round(s.PH / 110)), wait: rnd(2, 4), sparks: [] };
       s.flakes = Array.from({ length: n }, () => ({
         x: rnd(0, s.PW),
         y: rnd(0, s.PH),
@@ -1816,6 +1905,31 @@
         if (on && v > 0.45) w.glow(toCell(l.x) - 0.5, toCell(l.y) - 0.5, toCell(l.big ? 3 : 2.4), l.c, (l.big ? 0.4 : 0.32) * v);
       }
       c.globalAlpha = 1;
+
+      // Santa crosses the sky now and then, leaving a trail of golden sparkles.
+      const sa = s.santa;
+      const ss = Math.max(1, Math.round(s.PH / 110));
+      if (sa.wait > 0) sa.wait -= dt;
+      else {
+        sa.x += dt * s.PW * 0.045 * sp;
+        const y = s.PH * 0.17 + Math.sin(sa.x * 0.03) * s.PH * 0.035;
+        if (Math.random() < dt * 30) sa.sparks.push({ x: sa.x + 2 * ss, y: y + 5 * ss, age: 0 });
+        nxSanta(c, P, sa.x, y, ss, Math.floor(t * 6), Math.sin(t * 5) > -0.3);
+        w.glow(toCell(sa.x + 40 * ss) - 0.5, toCell(y - 0.5 * ss) - 0.5, toCell(2.5 * ss), '#ff3b30', 0.45 + 0.2 * Math.sin(t * 5));
+        if (sa.x > s.PW + 10) {
+          sa.x = -45 * ss;
+          sa.wait = rnd(14, 26);
+        }
+      }
+      for (const k of sa.sparks) {
+        k.age += dt;
+        k.y += dt * 2;
+        c.globalAlpha = Math.max(0, 1 - k.age / 1.6);
+        c.fillStyle = k.age < 0.5 ? '#fff4c2' : '#ffd34d';
+        c.fillRect(Math.round(k.x) * P, Math.round(k.y) * P, P, P);
+      }
+      c.globalAlpha = 1;
+      sa.sparks = sa.sparks.filter((k) => k.age < 1.6);
 
       // Snow: near flakes are bigger, brighter and faster. The pointer blows them aside.
       const m = w.mouse;
