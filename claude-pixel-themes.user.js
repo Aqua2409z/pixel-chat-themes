@@ -1731,55 +1731,71 @@
       }
     };
 
-    // A snowman in the foreground: three snowballs with blue shade, coal eyes and
-    // buttons, a carrot nose, a red scarf, a top hat and stick arms.
+    // A cute snowman (our own design, chibi proportions): a big round head with
+    // shiny eyes, rosy cheeks and a smile, a knitted beanie with a pompom, a
+    // striped scarf, a small round body and stick arms, one waving, with mittens.
     const snowman = (cx, gy, size) => {
-      const r1 = size * 0.32;
-      const r2 = size * 0.23;
-      const r3 = size * 0.16;
-      const balls = [
-        [gy - r1, r1],
-        [gy - r1 * 2 - r2 * 0.75, r2],
-        [gy - r1 * 2 - r2 * 1.5 - r3 * 0.75, r3],
-      ];
-      for (let y = Math.floor(gy - size * 1.4); y <= gy + 1; y++) {
-        for (let x = Math.floor(cx - r1 - 1); x <= cx + r1 + 1; x++) {
-          for (const [by, br] of balls) {
-            const d = Math.hypot(x - cx, y - by);
-            if (d > br) continue;
-            const u = (x - cx) / br + (y - by) / br * 0.4;
-            put(x, y, d > br - 1 ? NX.snowDeep : u > 0.35 || (u > 0.15 && nxB(x, y) < (u - 0.15) * 5) ? NX.snowShade : NX.snow);
+      const u = Math.max(1, Math.round(size / 26));
+      const outline = nxHex('#8296c4');
+      const coal = nxHex('#1d1a22');
+      const P = (x, y, col) => {
+        for (let a = 0; a < u; a++) for (let b = 0; b < u; b++) put(cx + x * u + a, gy + y * u + b, col);
+      };
+      const ball = (oy, r) => {
+        for (let y = -r - 1; y <= r + 1; y++) {
+          for (let x = -r - 1; x <= r + 1; x++) {
+            const d = Math.hypot(x, y * 1.05);
+            if (d > r + 0.5) continue;
+            const edge = d > r - 0.5;
+            const shade = x * 0.6 + y * 0.8 > r * 0.45;
+            P(x, oy + y, edge ? outline : shade ? NX.snowShade : NX.snow);
           }
         }
+      };
+      // Shadow on the snow, then body and head.
+      for (let x = -9; x <= 11; x++) P(x, 0, NX.snowShade);
+      ball(-6, 6);
+      ball(-18, 7.5);
+      // Little feet.
+      for (const fx of [-3, 2]) for (let x = 0; x < 3; x++) P(fx + x, -1, x === 0 || x === 2 ? outline : NX.snow);
+      // Buttons.
+      P(0, -8, coal);
+      P(0, -5, coal);
+      // Face: round shiny eyes, rosy cheeks, a little carrot and a small smile.
+      const hy = -18;
+      for (const ex of [-3, 2]) {
+        P(ex, hy - 1, coal); P(ex + 1, hy - 1, coal);
+        P(ex, hy, coal); P(ex + 1, hy, coal);
+        P(ex + 1, hy - 1, [255, 255, 255]);
       }
-      // Shadow on the snow.
-      for (let x = Math.floor(cx - r1 * 1.2); x <= cx + r1 * 1.6; x++) put(x, gy + 1, NX.snowShade);
-      const [hy, hr] = balls[2];
-      const coal = nxHex('#1d1a22');
-      put(cx - hr * 0.4, hy - hr * 0.2, coal);
-      put(cx + hr * 0.3, hy - hr * 0.2, coal);
+      const pink = nxHex('#f3a6b6');
+      P(-5, hy + 1, pink); P(-4, hy + 1, pink);
+      P(4, hy + 1, pink); P(5, hy + 1, pink);
       const carrot = nxHex('#f08a24');
-      for (let k = 0; k < Math.max(2, hr * 0.7); k++) put(cx + 1 + k, hy + hr * 0.1, carrot);
-      for (let k = -2; k <= 1; k++) put(cx + k, hy + hr * 0.55, coal, k % 2 ? 1 : 0.6);
-      // Hat.
-      const hatW = Math.max(3, hr * 1.1);
-      for (let x = Math.floor(cx - hatW); x <= cx + hatW; x++) put(x, hy - hr * 0.8, coal);
-      for (let y = Math.floor(hy - hr * 0.8 - hr * 1.1); y < hy - hr * 0.8; y++) for (let x = Math.floor(cx - hatW * 0.65); x <= cx + hatW * 0.65; x++) put(x, y, coal);
-      for (let x = Math.floor(cx - hatW * 0.65); x <= cx + hatW * 0.65; x++) put(x, hy - hr * 0.8 - 2, nxHex('#c8323a'));
-      // Scarf.
-      const [my, mr] = balls[1];
-      const scarf = nxHex('#d23a3a');
-      for (let x = Math.floor(cx - mr * 0.8); x <= cx + mr * 0.8; x++) { put(x, my - mr * 0.85, scarf); put(x, my - mr * 0.85 + 1, scarf); }
-      for (let k = 0; k < mr * 0.9; k++) put(cx + mr * 0.45 + (k > mr * 0.5 ? 1 : 0), my - mr * 0.85 + 2 + k, scarf);
-      for (let k = 0; k < 3; k++) put(cx, my - mr * 0.3 + k * mr * 0.35, coal);
-      // Stick arms.
-      const stick = nxHex('#4a3020');
-      for (let k = 0; k < mr * 1.4; k++) {
-        put(cx - mr - k, my - k * 0.55, stick);
-        put(cx + mr + k, my - k * 0.6, stick);
+      P(0, hy + 1, carrot); P(1, hy + 1, carrot); P(2, hy + 1, nxHex('#d9701a'));
+      for (const [x, y] of [[-1, 3], [0, 4], [1, 4], [2, 3]]) P(x, hy + y, coal);
+      // Beanie: a small ribbed red cap with a white trim and pompom.
+      const red = nxHex('#d8383f');
+      const redDark = nxHex('#a92a33');
+      for (let y = -9; y <= -6; y++) {
+        const half = Math.round(Math.sqrt(Math.max(0, 1 - Math.pow((y + 5.5) / 4.5, 2))) * 6);
+        for (let x = -half; x <= half; x++) P(x, hy + y, (x & 1) ? redDark : red);
       }
-      put(cx - mr - mr * 1.2, my - mr * 0.9, stick);
-      put(cx + mr + mr * 1.2, my - mr * 1.0, stick);
+      for (let x = -6; x <= 6; x++) P(x, hy - 5, Math.abs(x) === 6 ? outline : NX.snow);
+      for (let y = -12; y <= -10; y++) for (let x = -1; x <= 1; x++) if (Math.abs(x) + Math.abs(y + 11) < 3) P(x, hy + y, Math.abs(x) + Math.abs(y + 11) === 2 ? NX.snowShade : NX.snow);
+      // Striped scarf around the neck, its tail hanging to one side.
+      const green = nxHex('#3f8a4a');
+      for (let x = -6; x <= 6; x++) { P(x, -11, (x + 6) % 4 < 2 ? red : green); P(x, -12, (x + 6) % 4 < 2 ? red : green); }
+      for (let y = -10; y <= -6; y++) { P(3, y, y % 2 ? red : green); P(4, y, y % 2 ? red : green); }
+      P(3, -5, redDark); P(4, -5, redDark);
+      // Stick arms with mittens: the left one waves.
+      const stick = nxHex('#5a3a24');
+      for (let k = 0; k < 6; k++) P(-6 - k, -8 - k, stick);
+      P(-9, -12, stick); P(-10, -10, stick);
+      for (const [x, y] of [[-12, -14], [-13, -14], [-12, -15], [-13, -15]]) P(x, y, red);
+      for (let k = 0; k < 6; k++) P(6 + k, -7 + Math.floor(k / 2), stick);
+      P(9, -6, stick);
+      for (const [x, y] of [[12, -4], [13, -4], [12, -5], [13, -5]]) P(x, y, red);
     };
     const gl = (x) => Math.round(ground(x));
     if (wide) {
@@ -1794,7 +1810,7 @@
       lantern(Math.round(PW * 0.28), gl(PW * 0.28), Math.round(PH * 0.2));
       lantern(Math.round(PW * 0.56), gl(PW * 0.56), Math.round(PH * 0.17));
       const tr = tree(PW * 0.85, gl(PW * 0.85) + 2, PH * 0.5);
-      snowman(PW * 0.31, PH * 0.95, PH * 0.17);
+      snowman(PW * 0.3, PH * 0.96, PH * 0.3);
       branch(-2, PH * 0.02, 0.35, PW * 0.32, Math.max(3, PH * 0.025), 0);
       branch(-2, PH * 0.12, 0.15, PW * 0.22, Math.max(2, PH * 0.018), 1);
       branch(PW + 2, PH * 0.02, Math.PI - 0.25, PW * 0.2, Math.max(3, PH * 0.022), 0);
@@ -1805,7 +1821,7 @@
     house(Math.round(PW * 0.04), Math.round(Math.min(PW * 0.3, PH * 0.55)), Math.round(PH * 0.11));
     lantern(Math.round(PW * 0.42), gl(PW * 0.42), Math.round(PH * 0.14));
     const tr = tree(PW * 0.72, gl(PW * 0.72) + 2, PH * 0.38);
-    snowman(PW * 0.24, PH * 0.94, PH * 0.13);
+    snowman(PW * 0.24, PH * 0.95, PH * 0.22);
     branch(-2, PH * 0.02, 0.45, PW * 0.5, Math.max(2, PH * 0.015), 1);
     return { img, lights, glows, star: tr };
   }
