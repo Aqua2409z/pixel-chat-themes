@@ -120,7 +120,6 @@ assets/, preview.png          ảnh
 
 Dự án này lấy cảm hứng từ **[Claudinho](https://github.com/Lu1sR0/claudinho)** của **[Luis Roberto](https://github.com/Lu1sR0)**, một ứng dụng desktop cho Claude Code với hình nền ASCII động (giấy phép MIT).
 
-- Các phiên bản đầu có 8 theme (Claude Code, Cloud Drift, Honu Lagoon, Koi Pond, Jellyfish, Paper Boats, Fireflies, Moonlit) lấy theo tên và ý tưởng cảnh của Claudinho. 8 theme này đã được gỡ bỏ khỏi dự án.
 - Mã nguồn của Pixel Chat Themes được viết riêng, không sao chép từ Claudinho. Pixel Chat Themes là userscript cho claude.ai và plugin cho Claude Code, còn Claudinho là ứng dụng desktop cho Windows.
 
 Cảm ơn Luis Roberto vì ý tưởng ban đầu. Nếu bạn dùng Windows và muốn một ứng dụng Claude Code đầy đủ, hãy thử Claudinho.
