@@ -1462,6 +1462,394 @@
     },
   });
 
+  // Christmas Eve at blue hour, painted as fine pixel art: a snowy village of
+  // wooden houses with lit windows, a big decorated tree with twinkling lights
+  // and a star, street lanterns, snowy branches strung with fairy lights in the
+  // top corners, and snow falling. The pointer blows the snow aside.
+  const nxHex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const nxMix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const NX_BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  const nxB = (x, y) => NX_BAYER[(y & 3) * 4 + (x & 3)] / 16;
+  const NX = {
+    skyTop: nxHex('#142347'),
+    skyMid: nxHex('#29457c'),
+    skyLow: nxHex('#6f8fc4'),
+    star: nxHex('#e8eeff'),
+    hillFar: nxHex('#4d6aa3'),
+    hillNear: nxHex('#3a5590'),
+    pineFar: nxHex('#2c4677'),
+    snow: nxHex('#eef3fb'),
+    snowShade: nxHex('#b7c6e4'),
+    snowDeep: nxHex('#93a8d4'),
+    wall: nxHex('#7a4b31'),
+    wallDark: nxHex('#5a3423'),
+    beam: nxHex('#3e241a'),
+    window: nxHex('#ffcc66'),
+    windowHot: nxHex('#fff0b8'),
+    door: nxHex('#3a2116'),
+    roofUnder: nxHex('#6c7fae'),
+    tree: nxHex('#1d4733'),
+    treeDark: nxHex('#143424'),
+    treeLit: nxHex('#2c5f44'),
+    trunk: nxHex('#3b2619'),
+    post: nxHex('#1e2236'),
+    lamp: nxHex('#ffd27a'),
+    branch: nxHex('#2a2129'),
+    gold: nxHex('#ffd34d'),
+  };
+  const NX_BULBS = ['#fff1c4', '#ffe9a8', '#ffe9a8', '#ffd34d', '#ffd34d', '#ff6a4f', '#7fd0ff'];
+
+  // Paints the still scene into a PW x PH pixel buffer and records where the
+  // lights are, so the frame can make them twinkle.
+  function nxPaint(PW, PH, seed, wide) {
+    const img = new Uint8ClampedArray(PW * PH * 4);
+    const put = (x, y, col, a = 1) => {
+      x = Math.round(x);
+      y = Math.round(y);
+      if (x < 0 || y < 0 || x >= PW || y >= PH) return;
+      const i = (y * PW + x) * 4;
+      if (a >= 1) {
+        img[i] = col[0];
+        img[i + 1] = col[1];
+        img[i + 2] = col[2];
+      } else {
+        img[i] += (col[0] - img[i]) * a;
+        img[i + 1] += (col[1] - img[i + 1]) * a;
+        img[i + 2] += (col[2] - img[i + 2]) * a;
+      }
+      img[i + 3] = 255;
+    };
+    const H = (a, b) => hash(a, b, seed);
+    const lights = [];
+    const glows = [];
+
+    // Blue-hour sky in dithered bands, a few stars up high.
+    for (let y = 0; y < PH; y++) {
+      for (let x = 0; x < PW; x++) {
+        const t = y / (PH * 0.7);
+        const q = Math.round(clamp(t, 0, 1) * 10 + nxB(x, y) - 0.5) / 10;
+        put(x, y, q < 0.55 ? nxMix(NX.skyTop, NX.skyMid, q / 0.55) : nxMix(NX.skyMid, NX.skyLow, (q - 0.55) / 0.45));
+      }
+    }
+    for (let i = 0; i < PW * PH * 0.0012; i++) {
+      const x = H(i, 1) * PW;
+      const y = H(i, 2) * PH * 0.35;
+      put(x, y, NX.star, 0.4 + H(i, 3) * 0.6);
+    }
+
+    const ground = (x) => PH * (0.8 - 0.02 * Math.sin((x / PW) * 3.4 + H(9, 9) * 6));
+    // Far snowy hills with rows of snow-capped pines.
+    [
+      [0.6, 0.05, NX.hillFar, 0.05],
+      [0.68, 0.045, NX.hillNear, 0.075],
+    ].forEach(([base, amp, col, ph], k) => {
+      const p = [H(k, 20) * 6, H(k, 21) * 6];
+      const ridge = (x) => PH * (base - amp * (0.5 + 0.35 * Math.sin((x / PW) * 6 + p[0]) + 0.15 * Math.sin((x / PW) * 17 + p[1])));
+      const top = new Float32Array(PW);
+      for (let x = 0; x < PW; x++) top[x] = ridge(x);
+      const pineH = Math.max(3, PH * ph);
+      const snowTips = [];
+      for (let cx = H(k, 30) * pineH; cx < PW; cx += pineH * (0.35 + 0.4 * H(Math.round(cx), k + 40))) {
+        if (H(Math.round(cx), k + 50) < 0.3) continue;
+        const c = Math.round(cx);
+        const h = pineH * (0.6 + 0.5 * H(c, k + 60));
+        const tip = ridge(c) - h;
+        for (let d = 0; d <= h; d++) {
+          const half = Math.floor(d * 0.36) - ((d % 4) === 0 && d > 0 ? 1 : 0);
+          for (let dx = -half; dx <= half; dx++) {
+            const x = c + dx;
+            if (x < 0 || x >= PW) continue;
+            if (tip + d < top[x]) {
+              top[x] = tip + d;
+              if ((d % 4) === 1 || d === 0) snowTips.push([x, tip + d]);
+            }
+          }
+        }
+      }
+      for (let x = 0; x < PW; x++) {
+        for (let y = Math.max(0, Math.round(top[x])); y < PH; y++) put(x, y, col);
+        // Snow lies on the open ground between the pines.
+        if (Math.abs(top[x] - ridge(x)) < 0.5) put(x, Math.round(top[x]), nxMix(col, NX.snow, 0.3 - k * 0.08));
+      }
+      for (const [x, y] of snowTips) put(x, y, nxMix(col, NX.snow, 0.6));
+      // Distant village glow at the foot of the hills.
+      for (let y = Math.round(PH * (base + 0.02)); y < PH * (base + 0.08); y++) {
+        for (let x = 0; x < PW; x++) if (nxB(x, y) < 0.25 * (1 - k * 0.4)) put(x, y, nxMix(col, NX.skyLow, 0.5), 0.6);
+      }
+    });
+
+    // Snowy ground with soft blue shadows and sparkles.
+    for (let x = 0; x < PW; x++) {
+      const g = Math.round(ground(x));
+      for (let y = g; y < PH; y++) {
+        const t = (y - g) / (PH - g + 1);
+        let col = NX.snow;
+        // Soft drifts: broad shadowed hollows, dithered only along their edges.
+        const sh = 0.5 + 0.5 * Math.sin(x * 0.035 + Math.sin(y * 0.09) * 2 + H(1, 1) * 6) * Math.cos(y * 0.07 + x * 0.01);
+        if (sh > 0.78 || (sh > 0.68 && nxB(x, y) < (sh - 0.68) * 10)) col = NX.snowShade;
+        if (y === g) col = nxMix(NX.snow, NX.skyLow, 0.25);
+        put(x, y, col);
+        if (H(x, y + 999) < 0.004) put(x, y, [255, 255, 255]);
+      }
+    }
+
+    // Wooden houses with thick snow on their roofs and lit windows.
+    const s = Math.max(1, Math.round(PH / 130));
+    const house = (x0, w, wallH) => {
+      const g = Math.round(Math.min(ground(x0), ground(x0 + w)));
+      const roofH = Math.round(w * 0.42);
+      const top = g - wallH;
+      for (let y = top; y < g; y++) {
+        for (let x = x0; x < x0 + w; x++) {
+          const beam = (x - x0) % (6 * s) === 0 || y === top || x === x0 + w - 1;
+          put(x, y, beam ? NX.beam : x > x0 + w * 0.6 ? NX.wallDark : NX.wall);
+        }
+      }
+      // Windows two per floor, a door in the middle.
+      const ww = 3 * s;
+      const wh = 4 * s;
+      const rows = Math.max(1, Math.floor((wallH - 2 * s) / (wh + 3 * s)));
+      for (let r = 0; r < rows; r++) {
+        const wy = top + 2 * s + r * (wh + 3 * s);
+        for (const fx of [0.18, 0.66]) {
+          const wx = Math.round(x0 + w * fx);
+          for (let y = wy; y < wy + wh; y++) for (let x = wx; x < wx + ww; x++) put(x, y, (x - wx) === Math.floor(ww / 2) || (y - wy) === Math.floor(wh / 2) ? NX.beam : y > wy + wh / 2 ? NX.windowHot : NX.window);
+          glows.push({ x: wx + ww / 2, y: wy + wh / 2, r: 6 * s, c: '#ffbf5a', a: 0.45 });
+        }
+      }
+      const dx = Math.round(x0 + w / 2 - 2 * s);
+      for (let y = g - 6 * s; y < g; y++) for (let x = dx; x < dx + 4 * s; x++) put(x, y, NX.door);
+      // Gable roof: dark underside, then a deep layer of snow with a soft edge.
+      for (let d = 0; d <= roofH; d++) {
+        const half = (d / roofH) * (w / 2 + 2 * s);
+        const y = top - roofH + d;
+        for (let x = Math.round(x0 + w / 2 - half); x <= x0 + w / 2 + half; x++) put(x, y, d > roofH - 2 * s ? NX.roofUnder : y < top - roofH + d + 1 && H(x, y) < 0.2 ? NX.snowShade : NX.snow);
+      }
+      // Icicle drips and a string of lights along the eaves.
+      for (let x = x0 - 2 * s; x <= x0 + w + 2 * s; x++) if (H(x, top) < 0.25) for (let k = 0; k < 1 + H(x, 3) * 2 * s; k++) put(x, top + 1 + k, NX.snowShade);
+      for (let d = 2; d <= roofH; d += 2 * s) {
+        const half = (d / roofH) * (w / 2 + 2 * s);
+        const y = top - roofH + d + 1;
+        lights.push({ x: x0 + w / 2 - half, y, c: pick(NX_BULBS), ph: H(d, x0) * 6 });
+        lights.push({ x: x0 + w / 2 + half, y, c: pick(NX_BULBS), ph: H(d, x0 + 1) * 6 });
+      }
+      // Chimney with a cap of snow.
+      const cx = Math.round(x0 + w * 0.72);
+      const cTop = top - Math.round(roofH * 0.75);
+      for (let y = cTop; y < cTop + 4 * s; y++) for (let x = cx; x < cx + 3 * s; x++) put(x, y, y < cTop + s ? NX.snow : NX.beam);
+    };
+
+    // The tree: tiers of dark needles, snow on each tier, lights in a spiral.
+    const tree = (cx, base, h) => {
+      const tipY = base - h;
+      for (let y = Math.round(base - h * 0.08); y < base; y++) for (let x = Math.round(cx - h * 0.03); x <= cx + h * 0.03; x++) put(x, y, NX.trunk);
+      const half = (d) => {
+        const tier = h / 6;
+        const k = d % tier;
+        return (d / h) * h * 0.36 * (0.75 + 0.25 * (k / tier)) + 1;
+      };
+      for (let d = 0; d < h * 0.92; d++) {
+        const y = tipY + d;
+        const hw = half(d);
+        for (let x = Math.round(cx - hw); x <= cx + hw; x++) {
+          const u = (x - cx) / hw;
+          const tierTop = (d % (h / 6)) < 1.5;
+          let col = u < -0.2 ? NX.treeLit : u > 0.45 ? NX.treeDark : NX.tree;
+          if (tierTop && H(x, y) < 0.7) col = NX.snow;
+          else if (H(x, y + 3) < 0.05) col = NX.snowShade;
+          put(x, y, col);
+        }
+      }
+      // Lights wind around the tree; only the front of the spiral shows.
+      const nb = Math.round(clamp(h * 9, 120, 520));
+      for (let i = 0; i < nb; i++) {
+        const t = i / nb;
+        const d = t * h * 0.9;
+        const ang = t * Math.PI * 2 * 7.5;
+        if (Math.cos(ang) < -0.2) continue;
+        lights.push({ x: cx + Math.sin(ang) * half(d) * 0.92, y: tipY + d, c: pick(NX_BULBS), ph: H(i, 77) * 6, big: true });
+      }
+      // Baubles.
+      for (let i = 0; i < h * 0.25; i++) {
+        const d = h * (0.15 + 0.75 * H(i, 88));
+        const x = cx + (H(i, 89) * 2 - 1) * half(d) * 0.8;
+        put(x, tipY + d, nxHex(pick(['#e0393e', '#ffd34d', '#e0393e', '#c8d4ff'])));
+      }
+      // The star.
+      const r = Math.max(2, h * 0.05);
+      for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
+        const a = Math.atan2(y, x);
+        const rr = r * (0.5 + 0.5 * Math.abs(Math.cos(a * 2.5)));
+        if (Math.hypot(x, y) <= rr) put(cx + x, tipY - r * 0.6 + y, NX.gold);
+      }
+      glows.push({ x: cx, y: tipY - r * 0.6, r: r * 4, c: '#ffd34d', a: 0.55, star: true });
+      glows.push({ x: cx, y: base - h * 0.45, r: h * 0.7, c: '#ffb347', a: 0.28 });
+      return { tipY, r };
+    };
+
+    // Street lanterns.
+    const lantern = (x, g, h) => {
+      for (let y = g - h; y < g; y++) put(x, y, NX.post);
+      put(x - 1, g - 1, NX.post);
+      put(x + 1, g - 1, NX.post);
+      const w = Math.max(2, Math.round(h * 0.08));
+      for (let y = g - h - w * 2; y < g - h; y++) for (let k = -w; k <= w; k++) put(x + k, y, Math.abs(k) === w ? NX.post : NX.lamp);
+      for (let k = -w - 1; k <= w + 1; k++) put(x + k, g - h - w * 2 - 1, NX.snow);
+      glows.push({ x, y: g - h - w, r: h * 0.45, c: '#ffc861', a: 0.5, lamp: true });
+    };
+
+    // Snowy branches reaching in from the top corners, strung with fairy lights.
+    const branch = (x, y, ang, len, th, depth) => {
+      let px = x;
+      let py = y;
+      for (let i = 0; i < len; i++) {
+        ang += (H(Math.round(px), Math.round(py)) - 0.5) * 0.25;
+        px += Math.cos(ang);
+        py += Math.sin(ang) * 0.9 + 0.12;
+        // Branches stay in the top corners, clear of the tree's star.
+        if (py > PH * 0.26) break;
+        const t = Math.max(1, th * (1 - i / len));
+        for (let k = -t / 2; k <= t / 2; k++) put(px, py + k, NX.branch);
+        put(px, py - t / 2 - 1, NX.snow);
+        if (H(i, depth + Math.round(x)) < 0.3) put(px, py - t / 2 - 2, NX.snowShade);
+        if (i % 3 === 0) lights.push({ x: px, y: py + t / 2 + 1, c: '#ffe9a8', ph: H(i, Math.round(px)) * 6, fairy: true });
+        if (depth < 2 && i > len * 0.25 && H(i, depth * 31 + Math.round(x)) < 0.05) branch(px, py, ang + (H(i, 5) < 0.5 ? -0.6 : 0.6), len * 0.45, t * 0.7, depth + 1);
+      }
+    };
+
+    // Warm light spilling onto the snow, dithered so it reads as pixel art.
+    const pool = (cx, cy, rx, ry, a) => {
+      const warm = nxHex('#ffc77a');
+      for (let y = Math.floor(cy - ry); y <= cy + ry; y++) {
+        for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
+          if (y < ground(x)) continue;
+          const d = Math.hypot((x - cx) / rx, (y - cy) / ry);
+          if (d >= 1) continue;
+          const v = Math.round(Math.pow(1 - d, 0.8) * a * 8 + nxB(x, y) - 0.5) / 8;
+          if (v > 0) put(x, y, warm, v);
+        }
+      }
+    };
+    const gl = (x) => Math.round(ground(x));
+    if (wide) {
+      pool(PW * 0.28, gl(PW * 0.28) + PH * 0.04, PW * 0.08, PH * 0.06, 0.8);
+      pool(PW * 0.56, gl(PW * 0.56) + PH * 0.035, PW * 0.07, PH * 0.05, 0.75);
+      pool(PW * 0.85, gl(PW * 0.85) + PH * 0.04, PW * 0.14, PH * 0.08, 0.7);
+      pool(PW * 0.09, gl(PW * 0.09) + PH * 0.04, PW * 0.09, PH * 0.05, 0.45);
+      pool(PW * 0.68, gl(PW * 0.68) + PH * 0.04, PW * 0.08, PH * 0.05, 0.45);
+      house(Math.round(PW * 0.03), Math.round(Math.min(PW * 0.11, PH * 0.55)), Math.round(PH * 0.16));
+      house(Math.round(PW * 0.16), Math.round(Math.min(PW * 0.09, PH * 0.55)), Math.round(PH * 0.12));
+      house(Math.round(PW * 0.62), Math.round(Math.min(PW * 0.11, PH * 0.55)), Math.round(PH * 0.15));
+      lantern(Math.round(PW * 0.28), gl(PW * 0.28), Math.round(PH * 0.2));
+      lantern(Math.round(PW * 0.56), gl(PW * 0.56), Math.round(PH * 0.17));
+      const tr = tree(PW * 0.85, gl(PW * 0.85) + 2, PH * 0.5);
+      branch(-2, PH * 0.02, 0.35, PW * 0.32, Math.max(3, PH * 0.025), 0);
+      branch(-2, PH * 0.12, 0.15, PW * 0.22, Math.max(2, PH * 0.018), 1);
+      branch(PW + 2, PH * 0.02, Math.PI - 0.25, PW * 0.2, Math.max(3, PH * 0.022), 0);
+      return { img, lights, glows, star: tr };
+    }
+    pool(PW * 0.72, gl(PW * 0.72) + PH * 0.03, PW * 0.3, PH * 0.05, 0.7);
+    pool(PW * 0.42, gl(PW * 0.42) + PH * 0.03, PW * 0.18, PH * 0.04, 0.7);
+    house(Math.round(PW * 0.04), Math.round(Math.min(PW * 0.3, PH * 0.55)), Math.round(PH * 0.11));
+    lantern(Math.round(PW * 0.42), gl(PW * 0.42), Math.round(PH * 0.14));
+    const tr = tree(PW * 0.72, gl(PW * 0.72) + 2, PH * 0.38);
+    branch(-2, PH * 0.02, 0.45, PW * 0.5, Math.max(2, PH * 0.015), 1);
+    return { img, lights, glows, star: tr };
+  }
+
+  THEMES.push({
+    id: 'noel',
+    name: 'Giáng sinh',
+    dark: true,
+    alias: ['noel', 'giang sinh', 'christmas', 'xmas', 'cay thong', 'tuyet', 'snow', 'mua dong', 'winter'],
+    glyphs: '*+.',
+    bg(c, w, h, W) {
+      const s = W.s;
+      const buf = document.createElement('canvas');
+      buf.width = s.PW;
+      buf.height = s.PH;
+      const bx = buf.getContext('2d');
+      const id = bx.createImageData(s.PW, s.PH);
+      id.data.set(s.art.img);
+      bx.putImageData(id, 0, 0);
+      c.imageSmoothingEnabled = false;
+      c.drawImage(buf, 0, 0, s.PW * s.P, s.PH * s.P);
+      c.imageSmoothingEnabled = true;
+    },
+    init(w) {
+      const s = w.s;
+      s.P = w.cell >= 11 ? 4 : Math.max(1, Math.round(w.cell / 3));
+      s.PW = Math.ceil(w.w / s.P);
+      s.PH = Math.ceil(w.h / s.P);
+      s.seed = rint(1, 9999);
+      s.art = nxPaint(s.PW, s.PH, s.seed, s.PW >= 180);
+      const n = Math.round(clamp((s.PW * s.PH) / 140, 20, 900) * (cfg.density || 1));
+      s.flakes = Array.from({ length: n }, () => ({
+        x: rnd(0, s.PW),
+        y: rnd(0, s.PH),
+        z: Math.random(),
+        ph: rnd(0, 6),
+        vx: 0,
+      }));
+    },
+    frame(w, dt) {
+      const s = w.s;
+      const t = w.t;
+      const c = w.ctx;
+      const P = s.P;
+      const toCell = (v) => (v * P) / w.cell;
+      const sp = cfg.speed || 1;
+
+      // Warm light: windows, lanterns, the star and the glow around the tree.
+      for (const g of s.art.glows) {
+        const flick = g.lamp ? 0.06 * Math.sin(t * 3 + g.x) : g.star ? 0.15 * Math.sin(t * 1.7) : 0.04 * Math.sin(t * 2.3 + g.y);
+        w.glow(toCell(g.x) - 0.5, toCell(g.y) - 0.5, toCell(g.r), g.c, g.a + flick);
+      }
+
+      // Twinkling bulbs: each fades on its own beat; the big ones get a halo.
+      for (const l of s.art.lights) {
+        const v = 0.5 + 0.5 * Math.sin(t * (l.fairy ? 2.2 : 3.1) + l.ph);
+        const on = v > 0.25;
+        c.globalAlpha = on ? 0.7 + 0.3 * v : 0.3;
+        c.fillStyle = l.c;
+        c.fillRect(Math.round(l.x) * P, Math.round(l.y) * P, P, P);
+        if (on && v > 0.45) w.glow(toCell(l.x) - 0.5, toCell(l.y) - 0.5, toCell(l.big ? 3 : 2.4), l.c, (l.big ? 0.4 : 0.32) * v);
+      }
+      c.globalAlpha = 1;
+
+      // Snow: near flakes are bigger, brighter and faster. The pointer blows them aside.
+      const m = w.mouse;
+      const mx = m && m.active ? (m.x * w.cell) / P : -999;
+      const my = m && m.active ? (m.y * w.cell) / P : -999;
+      const rad = Math.max(10, s.PH * 0.1);
+      c.fillStyle = '#ffffff';
+      for (const f of s.flakes) {
+        const sz = f.z > 0.85 ? 2 : 1;
+        const v = (4 + f.z * 9) * sp;
+        f.y += v * dt;
+        f.x += (Math.sin(t * 0.8 + f.ph) * (1 + f.z * 2) + 1.2 + f.vx) * dt;
+        const dx = f.x - mx;
+        const dy = f.y - my;
+        const d = Math.hypot(dx, dy);
+        if (d < rad && d > 0.01) {
+          const k = (1 - d / rad) * 60;
+          f.vx += (dx / d) * k * dt;
+          f.y += (dy / d) * k * dt * 0.5;
+        }
+        f.vx *= Math.pow(0.15, dt);
+        if (f.y > s.PH + 2) {
+          f.y = -2;
+          f.x = rnd(-10, s.PW);
+        }
+        if (f.x > s.PW + 2) f.x -= s.PW + 4;
+        if (f.x < -3) f.x += s.PW + 4;
+        c.globalAlpha = 0.45 + f.z * 0.55;
+        c.fillRect(Math.round(f.x) * P, Math.round(f.y) * P, sz * P, sz * P);
+      }
+      c.globalAlpha = 1;
+    },
+  });
+
   const ITEMS = THEMES.map((t) => t.id).concat('off');
   const byId = (id) => THEMES.find((t) => t.id === id);
 
