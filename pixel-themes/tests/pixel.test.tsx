@@ -53,40 +53,45 @@ function engine(on: On, kept?: unknown) {
 const pixel = (args: string) =>
   ({ command: 'pixel', args, origin: { kind: 'composer' }, presentation: { isFullscreen: false, columns: 100 } }) as const
 
-test('/pixel koi switches the theme, keeps it, and draws the koi strip where SVG exists', async ($, on) => {
+test('/pixel hoian switches the theme, keeps it, and draws the Hội An strip where SVG exists', async ($, on) => {
   const store = engine(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
 
-  const ran = await $.command.run(pixel('koi'))
-  expect(ran.text).toContain('Koi Pond')
-  expect(store.get('prefs')).toEqual({ theme: 'koi', band: true, tint: true })
+  const ran = await $.command.run(pixel('hoian'))
+  expect(ran.text).toContain('Hội An')
+  expect(store.get('prefs')).toEqual({ theme: 'hoian', band: true, tint: true })
 
   for (const surface of SURFACES) {
     const ui = await $.ui.mount(band(surface))
     const svg = await ui.find({ type: 'Svg' })
     if (surface === 'terminal') expect(svg).toBeUndefined()
-    else expect(String(svg?.props.alt)).toContain('Koi Pond')
+    else expect(String(svg?.props.alt)).toContain('Hội An')
     expect((await ui.find({ type: 'Text', text: /engine/ }))?.text).toBe('engine')
     await ui.unmount()
   }
 })
 
 test('a theme kept from an earlier session comes back, and Vietnamese names work', async ($, on) => {
-  const store = engine(on, { theme: 'moon', band: false, tint: true })
+  const store = engine(on, { theme: 'galaxy', band: false, tint: true })
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
 
   const off = await $.ui.mount(band('desktop'))
   expect(await off.find({ type: 'Svg' })).toBeUndefined()
   await off.unmount()
 
-  await $.command.run(pixel('sứa'))
-  expect(store.get('prefs')).toEqual({ theme: 'jelly', band: false, tint: true })
+  await $.command.run(pixel('fuji'))
+  expect(store.get('prefs')).toEqual({ theme: 'sakura', band: false, tint: true })
 
   const unknown = await $.command.run(pixel('pizza'))
   expect(unknown.text).toContain('Không có theme')
 
-  // The flag theme answers to its Vietnamese names; "co" must not fall through to "code".
-  for (const [typed, id] of [['vietnam', 'vn'], ['Việt Nam', 'vn'], ['co', 'vn'], ['code', 'code'], ['sakura', 'sakura'], ['anh đào', 'sakura'], ['galaxy', 'galaxy'], ['vu tru', 'galaxy'], ['ngân hà', 'galaxy'], ['Hội An', 'hoian'], ['den long', 'hoian'], ['hoa', 'sakura'], ['dem', 'moon']] as const) {
+  // The eight early themes were removed; their names no longer pick anything.
+  for (const gone of ['koi', 'cloud', 'moon', 'jelly']) {
+    expect((await $.command.run(pixel(gone))).text).toContain('Không có theme')
+  }
+
+  // Each theme answers to its Vietnamese names.
+  for (const [typed, id] of [['vietnam', 'vn'], ['Việt Nam', 'vn'], ['co', 'vn'], ['sakura', 'sakura'], ['anh đào', 'sakura'], ['galaxy', 'galaxy'], ['vu tru', 'galaxy'], ['ngân hà', 'galaxy'], ['Hội An', 'hoian'], ['den long', 'hoian'], ['hoa', 'sakura']] as const) {
     await $.command.run(pixel(typed))
     expect((store.get('prefs') as { theme: string }).theme).toBe(id)
   }
@@ -96,7 +101,7 @@ test('the picker applies a theme on press, on every surface', async ($, on) => {
   const store = engine(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
 
-  for (const [surface, id] of [['terminal', 'boats'], ['desktop', 'lagoon'], ['vscode', 'fireflies'], ['mobile', 'code']] as const) {
+  for (const [surface, id] of [['terminal', 'sakura'], ['desktop', 'galaxy'], ['vscode', 'hoian'], ['mobile', 'vn']] as const) {
     const ui = await $.ui.mount(pane('pixel-picker', surface))
     await ui.press({ key: id })
     expect(((store.get('prefs')) as { theme: string }).theme).toBe(id)
@@ -118,7 +123,7 @@ test('messages get a themed frame until tint is turned off', async ($, on) => {
     const ui = await $.ui.mount(userMessage(surface))
     const box = await ui.find({ type: 'Box' })
     expect(box?.props.borderStyle).toBe('round')
-    expect(box?.props.borderColor).toBe('#5aa9e6')
+    expect(box?.props.borderColor).toBe('#da251d')
     expect((await ui.find({ type: 'Text', text: /engine/ }))?.text).toBe('engine')
     await ui.unmount()
   }
@@ -129,12 +134,20 @@ test('messages get a themed frame until tint is turned off', async ($, on) => {
   await plain.unmount()
 })
 
+test('a theme removed since an earlier session falls back to Việt Nam', async ($, on) => {
+  engine(on, { theme: 'koi', band: true, tint: true })
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount(band('desktop'))
+  expect(String((await ui.find({ type: 'Svg' }))?.props.alt)).toContain('Việt Nam')
+  await ui.unmount()
+})
+
 test('the side pane shows the tall scene, or says the wallpaper is off', async ($, on) => {
   engine(on)
   await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
 
   const side = await $.ui.mount(pane('pixel-scene', 'desktop'))
-  expect(String((await side.find({ type: 'Svg' }))?.props.alt)).toContain('Cloud Drift')
+  expect(String((await side.find({ type: 'Svg' }))?.props.alt)).toContain('Việt Nam')
   await side.unmount()
 
   await $.command.run(pixel('off'))

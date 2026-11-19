@@ -4,7 +4,7 @@ import type { EngineInterface, Register } from 'claude-code'
 import type { Prefs } from '../types'
 import { THEMES, byId, findTheme, scene } from './scenes'
 
-const DEFAULTS: Prefs = { theme: 'cloud', band: true, tint: true }
+const DEFAULTS: Prefs = { theme: 'vn', band: true, tint: true }
 const STORE_KEY = 'prefs'
 // Change the tag when Prefs changes: it declines what an earlier version kept.
 const prefs = atom({ plugin: 'pixel-themes', key: 'prefs' } as const, DEFAULTS, { shape: 'prefs-1' })
