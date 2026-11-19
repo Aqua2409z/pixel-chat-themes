@@ -42,7 +42,7 @@ Trong tab Code của app Desktop thì dùng `/pixel` thay cho `/theme` (ví dụ
 | `/theme co`, `/theme sakura`, `/theme galaxy`, `/theme hoi an`, `/theme off` | Đổi thẳng theo tên hoặc tên tiếng Việt không dấu |
 | `Alt + Shift + →` / `←` | Chuyển nhanh sang theme tiếp theo / trước đó |
 | `Alt + T` | Mở/đóng bảng chọn |
-| Rê chuột trên màn hình | Tạo gió tương tác (cánh hoa, cá bơi, cuộn xoáy) |
+| Rê chuột trên màn hình | Tương tác với cảnh: thổi bay cánh hoa (Sakura Breeze), kéo xoáy hấp dẫn quanh hố đen (Cosmic Galaxy) |
 | Nút ô vuông nhiều màu ở cạnh phải | Mở bảng chọn (tiện trên điện thoại) |
 
 Bộ gõ Telex hay biến `/theme` thành `/thêm`. Script hiểu cả `/thêm` và `/nen`, nên không cần tắt bộ gõ.
@@ -77,22 +77,22 @@ Mỗi theme là một object trong mảng `THEMES` của file script:
 
 ```js
 THEMES.push({
-  id: 'sakura', name: 'Sakura', dark: false, alias: ['hoa'],
+  id: 'snow', name: 'Tuyết rơi', dark: true, alias: ['tuyet'],
   glyphs: '*.:',                       // ký tự in trong các ô
   bg(ctx, w, h) { /* vẽ gradient nền một lần */ },
   init(world) {                        // tạo trạng thái ban đầu
-    world.s.petals = Array.from({ length: 30 }, () => ({ x: Math.random() * world.cols, y: Math.random() * world.rows }));
+    world.s.flakes = Array.from({ length: 30 }, () => ({ x: Math.random() * world.cols, y: Math.random() * world.rows }));
   },
   frame(world, dt) {                   // gọi mỗi khung hình
-    for (const p of world.s.petals) {
-      p.y += dt; if (p.y > world.rows) p.y = 0;
-      world.tile(p.x, p.y, '#ffc4d6', '#e88aa8', '*');   // ô: (cột, hàng, màu ô, màu chữ, ký tự)
+    for (const f of world.s.flakes) {
+      f.y += dt; if (f.y > world.rows) f.y = 0;
+      world.tile(f.x, f.y, '#ffffff', '#c9d6e8', '*');   // ô: (cột, hàng, màu ô, màu chữ, ký tự)
     }
   },
 });
 ```
 
-Các hàm vẽ có sẵn: `world.tile`, `world.sprite` (vẽ hình từ ASCII art), `world.glyph`, `world.dot`, `world.glow`.
+Các hàm vẽ có sẵn: `world.tile`, `world.sprite` (vẽ hình từ ASCII art), `world.glyph`, `world.dot`, `world.glow`. Muốn theme cũng có trong tab Code thì thêm bản SVG tương ứng vào `pixel-themes/hooks/scenes.ts`. Theme Hội An là một ví dụ đầy đủ cho cả hai bản.
 
 ## Mod cho app Claude Desktop (tab Code)
 
@@ -125,9 +125,22 @@ Dự án này lấy cảm hứng từ **[Claudinho](https://github.com/Lu1sR0/cl
 
 Cảm ơn Luis Roberto vì ý tưởng ban đầu. Nếu bạn dùng Windows và muốn một ứng dụng Claude Code đầy đủ, hãy thử Claudinho.
 
+## Người đóng góp
+
+| Theme | Người làm |
+|---|---|
+| Việt Nam | [aqua2409z](https://github.com/Aqua2409z) |
+| Sakura Breeze | [aqua2409z](https://github.com/Aqua2409z) |
+| Cosmic Galaxy | [aqua2409z](https://github.com/Aqua2409z) |
+| Hội An | [windpham95-wq](https://github.com/windpham95-wq) ([#7](https://github.com/aqua2409z/pixel-chat-themes/pull/7)) |
+
+Cảm ơn mọi người đã đóng góp. Muốn có tên ở đây? Gửi một theme mới qua Pull request.
+
 ## Góp ý, báo lỗi
 
-Gặp lỗi hoặc muốn thêm theme mới? Mở [Issue](https://github.com/aqua2409z/pixel-chat-themes/issues), nhớ kèm ảnh chụp màn hình và cho biết bạn dùng trình duyệt hay app nào. Pull request luôn được chào đón.
+Gặp lỗi hoặc muốn thêm theme mới? Mở [Issue](https://github.com/aqua2409z/pixel-chat-themes/issues), nhớ kèm ảnh chụp màn hình và cho biết bạn dùng trình duyệt hay app nào.
+
+Pull request luôn được chào đón. Nhánh `main` được bảo vệ, nên mọi thay đổi đều đi qua Pull request: fork repo, sửa trên nhánh của bạn rồi mở PR. Nếu là theme mới, nhớ ghi rõ đã thử trên trình duyệt nào và chạy `claude plugin test ./pixel-themes` nếu có sửa plugin.
 
 ## Giấy phép
 
@@ -146,6 +159,8 @@ Gặp lỗi hoặc muốn thêm theme mới? Mở [Issue](https://github.com/aqu
 
 Inspired by [Claudinho](https://github.com/Lu1sR0/claudinho) by Luis Roberto: early versions had 8 themes that followed its theme names and scene ideas; those themes have since been removed. The code here was written separately.
 
-MIT licensed. Donations are optional: MB Bank `0923017526` (VietQR above).
+Contributors: Viet Nam, Sakura Breeze and Cosmic Galaxy by aqua2409z; Hoi An by windpham95-wq. Pull requests are welcome.
+
+MIT licensed.
 
 </details>
