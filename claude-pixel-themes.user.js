@@ -1521,6 +1521,7 @@
     };
     const H = (a, b) => hash(a, b, seed);
     const lights = [];
+    const chimneys = [];
     const glows = [];
 
     // Blue-hour sky in dithered bands, a few stars up high.
@@ -1531,11 +1532,54 @@
         put(x, y, q < 0.55 ? nxMix(NX.skyTop, NX.skyMid, q / 0.55) : nxMix(NX.skyMid, NX.skyLow, (q - 0.55) / 0.45));
       }
     }
+    const twinkles = [];
     for (let i = 0; i < PW * PH * 0.0012; i++) {
       const x = H(i, 1) * PW;
       const y = H(i, 2) * PH * 0.35;
       put(x, y, NX.star, 0.4 + H(i, 3) * 0.6);
+      if (H(i, 4) < 0.3) twinkles.push({ x, y, ph: H(i, 5) * 6, f: 1 + H(i, 6) * 2 });
     }
+
+    // A full moon with a soft dithered halo, low enough for Santa to cross it.
+    const moon = (mx, my, r) => {
+      for (let y = Math.floor(my - r * 2); y <= my + r * 2; y++) {
+        for (let x = Math.floor(mx - r * 2); x <= mx + r * 2; x++) {
+          const d = Math.hypot(x - mx, y - my);
+          if (d <= r) {
+            const shade = (x - mx) * 0.55 + (y - my) * 0.75 > r * 0.35;
+            const crater = hash(Math.floor((x - mx + r) / Math.max(2, r * 0.35)), Math.floor((y - my + r) / Math.max(2, r * 0.35)), seed + 7) < 0.3 && nxB(x, y) < 0.5;
+            put(x, y, crater ? nxHex('#d6cfb2') : shade && nxB(x, y) < 0.6 ? nxHex('#e2dcc2') : nxHex('#f6f2df'));
+          } else if (d <= r * 1.9 && nxB(x, y) < (1 - (d - r) / (r * 0.9)) * 0.55) put(x, y, nxHex('#c9d6f0'), 0.45);
+        }
+      }
+      glows.push({ x: mx, y: my, r: r * 4.5, c: '#dbe6ff', a: 0.32, moon: true });
+    };
+    moon(PW * (wide ? 0.42 : 0.3), PH * 0.17, Math.max(4, PH * 0.065));
+
+    // Distant mountains with snowy caps, lit on the moon's side.
+    const range = (base, height, col, shade, snowLit, snowShade, n, sd) => {
+      const peaks = [];
+      for (let i = 0; i < n; i++) peaks.push({ x: H(i, sd) * PW * 1.1 - PW * 0.05, h: height * (0.55 + 0.45 * H(i, sd + 1)), w: PW * (0.07 + 0.07 * H(i, sd + 2)) });
+      for (let x = 0; x < PW; x++) {
+        let best = 0;
+        let pk = peaks[0];
+        for (const p of peaks) {
+          const v = p.h * (1 - Math.abs(x - p.x) / p.w);
+          if (v > best) {
+            best = v;
+            pk = p;
+          }
+        }
+        const lit = x < pk.x;
+        const top = Math.round(base - best + (H(x, sd + 3) - 0.5) * 1.4);
+        const cap = pk.h * 0.33 * (0.7 + 0.6 * H(x >> 1, sd + 4));
+        for (let y = Math.max(0, top); y < PH; y++) {
+          const capped = y - top < cap * (best / pk.h);
+          put(x, y, capped ? (lit ? snowLit : snowShade) : lit ? col : shade);
+        }
+      }
+    };
+    range(PH * 0.6, PH * 0.2, nxHex('#5f7bb2'), nxHex('#4c659c'), nxHex('#dfe7f6'), nxHex('#a9bbdc'), Math.max(4, Math.round(PW / 45)), 300);
 
     const ground = (x) => PH * (0.8 - 0.02 * Math.sin((x / PW) * 3.4 + H(9, 9) * 6));
     // Far snowy hills with rows of snow-capped pines.
@@ -1619,6 +1663,16 @@
       }
       const dx = Math.round(x0 + w / 2 - 2 * s);
       for (let y = g - 6 * s; y < g; y++) for (let x = dx; x < dx + 4 * s; x++) put(x, y, NX.door);
+      // A wreath on the door with a red bow.
+      const wcx = dx + 2 * s - 0.5;
+      const wcy = g - 4 * s;
+      for (let y = Math.floor(wcy - 2 * s); y <= wcy + 2 * s; y++) {
+        for (let x = Math.floor(wcx - 2 * s); x <= wcx + 2 * s; x++) {
+          const d = Math.hypot(x - wcx, y - wcy);
+          if (d <= 1.7 * s && d >= 0.8 * s) put(x, y, H(x, y) < 0.15 ? nxHex('#d8443c') : nxHex('#2f6b3a'));
+        }
+      }
+      put(wcx, wcy + 1.5 * s, nxHex('#d8443c'));
       // Gable roof: dark underside, then a deep layer of snow with a soft edge.
       for (let d = 0; d <= roofH; d++) {
         const half = (d / roofH) * (w / 2 + 2 * s);
@@ -1637,6 +1691,75 @@
       const cx = Math.round(x0 + w * 0.72);
       const cTop = top - Math.round(roofH * 0.75);
       for (let y = cTop; y < cTop + 4 * s; y++) for (let x = cx; x < cx + 3 * s; x++) put(x, y, y < cTop + s ? NX.snow : NX.beam);
+      chimneys.push({ x: cx + 1.5 * s, y: cTop - 1 });
+    };
+
+    // A back row of smaller houses and a church, tinted blue by the distance.
+    const far = (c) => nxMix(c, NX.skyLow, 0.42);
+    const backHouse = (x0, w, h, y0) => {
+      const roofH = Math.round(w * 0.45);
+      for (let y = y0 - h; y < y0; y++) for (let x = x0; x < x0 + w; x++) put(x, y, far(x > x0 + w * 0.6 ? NX.wallDark : NX.wall));
+      for (let d = 0; d <= roofH; d++) {
+        const half = (d / roofH) * (w / 2 + s);
+        for (let x = Math.round(x0 + w / 2 - half); x <= x0 + w / 2 + half; x++) put(x, y0 - h - roofH + d, far(d > roofH - s ? NX.roofUnder : NX.snow));
+      }
+      for (const fx of [0.25, 0.65]) {
+        const wx = Math.round(x0 + w * fx);
+        for (let y = y0 - h + s; y < y0 - h + 3 * s; y++) for (let x = wx; x < wx + 2 * s; x++) put(x, y, NX.window);
+        glows.push({ x: wx + s, y: y0 - h + 2 * s, r: 3 * s, c: '#ffbf5a', a: 0.25 });
+      }
+    };
+    const church = (x0, w, h, y0) => {
+      backHouse(x0 + w * 0.3, w * 0.7, h * 0.8, y0);
+      const tw = Math.max(3, Math.round(w * 0.32));
+      const th = h * 1.7;
+      for (let y = Math.round(y0 - th); y < y0; y++) for (let x = x0; x < x0 + tw; x++) put(x, y, far(x > x0 + tw * 0.6 ? NX.wallDark : nxHex('#9a6a48')));
+      const sh = th * 0.55;
+      for (let d = 0; d <= sh; d++) {
+        const half = (d / sh) * (tw / 2 + 1);
+        for (let x = Math.round(x0 + tw / 2 - half); x <= x0 + tw / 2 + half; x++) put(x, y0 - th - sh + d, far(x > x0 + tw / 2 ? NX.snowShade : NX.snow));
+      }
+      const cx = Math.round(x0 + tw / 2);
+      const cy = Math.round(y0 - th - sh);
+      for (let k = 1; k <= 3 * s; k++) put(cx, cy - k, NX.gold);
+      for (let k = -s; k <= s; k++) put(cx + k, cy - 2 * s, NX.gold);
+      for (let y = Math.round(y0 - th * 0.75); y < y0 - th * 0.75 + 4 * s; y++) for (let x = cx - s; x < cx + s; x++) put(x, y, NX.window);
+      glows.push({ x: cx, y: y0 - th * 0.7, r: 5 * s, c: '#ffcf70', a: 0.35 });
+    };
+
+    // Snow-laden pines between the houses.
+    const snowPine = (cx, base, h) => {
+      for (let y = Math.round(base - h * 0.1); y < base; y++) put(cx, y, NX.trunk);
+      const tiers = 4;
+      for (let k = 0; k < tiers; k++) {
+        const ty = base - h + k * h * 0.22;
+        const th = h * 0.34;
+        const tw = h * (0.16 + k * 0.07);
+        for (let d = 0; d < th; d++) {
+          const half = (d / th) * tw;
+          for (let x = Math.round(cx - half); x <= cx + half; x++) {
+            const u = (x - cx) / Math.max(1, half);
+            let col = u < -0.3 ? nxHex('#2c5a44') : u > 0.4 ? nxHex('#163527') : nxHex('#1f4433');
+            if (d < 2 || (d < th * 0.5 && H(x, Math.round(ty + d)) < 0.25)) col = d < 1 || u < 0.3 ? NX.snow : NX.snowShade;
+            put(x, ty + d, col);
+          }
+        }
+      }
+    };
+
+    // A wooden fence with snow on its posts and rails.
+    const fence = (x0, x1, y) => {
+      const post = nxHex('#6b4a34');
+      const dark = nxHex('#4a3224');
+      for (let x = Math.round(x0); x <= x1; x++) {
+        put(x, y - 2 * s, dark);
+        put(x, y - 4 * s, post);
+        put(x, y - 4 * s - 1, NX.snow);
+      }
+      for (let x = Math.round(x0); x <= x1; x += 5 * s) {
+        for (let k = 0; k < 6 * s; k++) for (let a = 0; a < s; a++) put(x + a, y - k, a ? dark : post);
+        for (let a = -1; a <= s; a++) put(x + a, y - 6 * s, NX.snow);
+      }
     };
 
     // The tree: tiers of dark needles, snow on each tier, lights in a spiral.
@@ -1804,75 +1927,90 @@
       pool(PW * 0.85, gl(PW * 0.85) + PH * 0.04, PW * 0.14, PH * 0.08, 0.7);
       pool(PW * 0.09, gl(PW * 0.09) + PH * 0.04, PW * 0.09, PH * 0.05, 0.45);
       pool(PW * 0.68, gl(PW * 0.68) + PH * 0.04, PW * 0.08, PH * 0.05, 0.45);
+      const by = Math.round(PH * 0.76);
+      for (const [fx, fw, fh] of [[0.2, 0.06, 0.07], [0.34, 0.055, 0.06], [0.44, 0.06, 0.075], [0.66, 0.05, 0.06], [0.76, 0.06, 0.07]]) backHouse(Math.round(PW * fx), Math.round(Math.min(PW * fw, PH * 0.3)), Math.round(PH * fh), by);
+      church(Math.round(PW * 0.52), Math.round(Math.min(PW * 0.07, PH * 0.35)), Math.round(PH * 0.09), by);
+      for (const [fx, fh] of [[0.255, 0.16], [0.4, 0.12], [0.6, 0.14], [0.79, 0.18], [0.985, 0.2]]) snowPine(PW * fx, gl(PW * fx) + 1, PH * fh);
       house(Math.round(PW * 0.03), Math.round(Math.min(PW * 0.11, PH * 0.55)), Math.round(PH * 0.16));
       house(Math.round(PW * 0.16), Math.round(Math.min(PW * 0.09, PH * 0.55)), Math.round(PH * 0.12));
       house(Math.round(PW * 0.62), Math.round(Math.min(PW * 0.11, PH * 0.55)), Math.round(PH * 0.15));
       lantern(Math.round(PW * 0.28), gl(PW * 0.28), Math.round(PH * 0.2));
       lantern(Math.round(PW * 0.56), gl(PW * 0.56), Math.round(PH * 0.17));
       const tr = tree(PW * 0.85, gl(PW * 0.85) + 2, PH * 0.5);
+      if (PH >= 80) fence(0, PW * 0.24, Math.round(PH * 0.91));
       if (PH >= 80) snowman(PW * 0.3, PH * 0.96, PH * 0.3);
       branch(-2, PH * 0.02, 0.35, PW * 0.32, Math.max(3, PH * 0.025), 0);
       branch(-2, PH * 0.12, 0.15, PW * 0.22, Math.max(2, PH * 0.018), 1);
       branch(PW + 2, PH * 0.02, Math.PI - 0.25, PW * 0.2, Math.max(3, PH * 0.022), 0);
-      return { img, lights, glows, star: tr };
+      return { img, lights, glows, star: tr, twinkles, chimneys };
     }
     pool(PW * 0.72, gl(PW * 0.72) + PH * 0.03, PW * 0.3, PH * 0.05, 0.7);
     pool(PW * 0.42, gl(PW * 0.42) + PH * 0.03, PW * 0.18, PH * 0.04, 0.7);
+    const by = Math.round(PH * 0.765);
+    backHouse(Math.round(PW * 0.38), Math.round(PW * 0.14), Math.round(PH * 0.045), by);
+    church(Math.round(PW * 0.55), Math.round(PW * 0.16), Math.round(PH * 0.06), by);
+    for (const [fx, fh] of [[0.36, 0.09], [0.97, 0.12]]) snowPine(PW * fx, gl(PW * fx) + 1, PH * fh);
     house(Math.round(PW * 0.04), Math.round(Math.min(PW * 0.3, PH * 0.55)), Math.round(PH * 0.11));
     lantern(Math.round(PW * 0.42), gl(PW * 0.42), Math.round(PH * 0.14));
     const tr = tree(PW * 0.72, gl(PW * 0.72) + 2, PH * 0.38);
     if (PH >= 80) snowman(PW * 0.24, PH * 0.95, Math.min(PH * 0.22, PW * 0.42));
     branch(-2, PH * 0.02, 0.45, PW * 0.5, Math.max(2, PH * 0.015), 1);
-    return { img, lights, glows, star: tr };
+    return { img, lights, glows, star: tr, twinkles, chimneys };
   }
 
   // Santa's sleigh and three reindeer, facing right, Rudolph in the lead. The
   // reindeer gallop on a four-step cycle and bob out of step with each other;
   // reins run from Santa's mitten through the team.
   const NX_DEER_TOP = [
-    '..........a...a.',
-    '...........a.aa.',
-    '.......a....aa..',
-    '........a..dbbd.',
-    '.........adbbbbd',
-    '..........dbebbn',
-    '..........dbbbd.',
-    't.ddddddddhbbd..',
-    'tdbbbbbbbbhbd...',
-    'dbbbbbbbbbgBd...',
-    'dBllllllbbBBd...',
-    '.dBBBBBBBBBd....',
+    '..............a...a.....',
+    '.............aAa.aAa....',
+    '..............aAAAa.....',
+    '...........oi..oooo.....',
+    '...........oiobbbbbo....',
+    '............obbbbebbo...',
+    '............obbbbbbLno..',
+    '..........oobbbbbbcco...',
+    '.t..oooooobbbbbbccoo....',
+    'tttobbbbbbbbbbhhcco.....',
+    '.tobLLLLLbbbbHgHco......',
+    '..obbbbbbbbbbbBBo.......',
+    '..oBccccccccBBBBo.......',
+    '...oBBBBBBBBBBBo........',
   ];
   const NX_DEER_LEGS = [
-    ['.bd.......bd....', 'b..d.....b..d...', 'k...k...k....k..'],
-    ['..bd......bd....', '..bd......bd....', '..kk......kk....'],
-    ['...bd....bd.....', '....b...b.d.....', '....k..k...k....'],
+    ['..oBo.......oBo........', '.oBo.........oBo.......', 'oBo...........oBo......', 'kk.............kk......'],
+    ['...oBo.....oBo.........', '...oBo.....oBo.........', '...oBo.....oBo.........', '...kk......kk..........'],
+    ['....oBo...oBo..........', '.....oBooBo............', '......kkkk.............', '.......................'],
   ];
   const NX_SLEIGH = [
-    '............W...............',
-    '...........RRW..............',
-    '..........RRRRR.............',
-    '.........WWWWWWW............',
-    '.........WKKeKKW............',
-    '.........WWKKpKW............',
-    '..gGg....WWWWWWW........SS..',
-    '..GGGqq..RRWWWRR.......SOOS.',
-    '.sssqqqRRRRWWWRRRRmm...S..S.',
-    'sssssssRRRRkkykRRR.....SOS..',
-    'SSSSSSSSSSSSSSSSSSSS...SS...',
-    'SOOOOOOOOOOOOOOOOOOSSSSS....',
-    'SSSSSSSSSSSSSSSSSSSSSSSS....',
-    '.SSSSSSSSSSSSSSSSSSSSSS.....',
-    '...d.............d....d.....',
-    'YYYYYYYYYYYYYYYYYYYYYYYYYY..',
-    '.........................YY.',
-    '........................YY..',
+    '..............ww..................',
+    '.............wRRo.................',
+    '............oRRRRo................',
+    '...........oRRRRRRo...............',
+    '..........owwwwwwwwo..............',
+    '..........owKKKKeKwo..............',
+    '..........owwKKKKpKo..............',
+    '...gGg....owwwwwwwwo..............',
+    '..gGgGgqq.owwwwwwwoRRo..........ss',
+    '..GGGGqqq.oRRwwwwRRRRmm........sYYs',
+    '.oSSSqqqooRRRRwwRRRRRRo.......sY..s',
+    'oSSSSSSSSoRRRkkykkRRRo.......sY.ss.',
+    'oSSSSSSSSSSSSSSSSSSSSSSSS.....sYs..',
+    'oSYYYYYYYYYYYYYYYYYYYYYSSSssssYs...',
+    'oSYrrrrrrrrrrrrrrrrrrrYSSSSSSSs....',
+    'oSYYYYYYYYYYYYYYYYYYYYYSSSSSSs.....',
+    '.oSSSSSSSSSSSSSSSSSSSSSSSSSso......',
+    '..ooooooooooooooooooooooooo........',
+    '....d...........d........d.........',
+    '.YYYYYYYYYYYYYYYYYYYYYYYYYYYYYY....',
+    '..............................YY...',
+    '.............................YY....',
   ];
   const NX_SANTA_PAL = {
-    a: '#e2cba0', d: '#3b2418', b: '#8f5d36', B: '#6b4326', l: '#d1a676', e: '#120b08', n: '#2b1a12',
-    h: '#c4303a', g: '#f2c14e', t: '#f3ece2', k: '#24160f',
-    W: '#f7f7f7', R: '#d23a3a', K: '#f2c9a0', p: '#e98a8a', m: '#3f8a4a', y: '#f2c14e',
-    S: '#b52828', O: '#f2c14e', Y: '#e8b84a', s: '#9b7048', q: '#2f8a4a', G: '#d23a3a',
+    o: '#2a170e', b: '#8b5a33', B: '#6a4124', L: '#b07a4a', c: '#ead1a8', a: '#ecd8ae', A: '#b89d72',
+    e: '#0d0806', n: '#2b1a12', h: '#b8262f', H: '#7e1820', g: '#f5c542', G: '#d8443c', t: '#f5efe4', k: '#1e120b', i: '#d79a8a',
+    w: '#f7f7f7', R: '#d23a3a', K: '#f2c9a0', p: '#e98a8a', m: '#2f7a3e', y: '#f5c542',
+    S: '#c22c2c', s: '#e8b84a', Y: '#e8b84a', r: '#9e1f22', q: '#2f8a4a', d: '#5a3a24',
   };
   const NX_GAIT = [0, 1, 2, 1];
   function nxTeam(c, P, x0, y0, u, t, noseOn) {
@@ -1888,7 +2026,7 @@
           if (col) px(ox + i, oy + j, col);
         }
       });
-    const deer = [0, 1, 2].map((k) => ({ x: 31 + k * 18, y: -1 + Math.round(Math.sin(t * 9 + k * 1.7)), f: NX_GAIT[Math.floor(t * 9 + k) % 4] }));
+    const deer = [0, 1, 2].map((k) => ({ x: 36 + k * 24, y: -3 + Math.round(Math.sin(t * 9 + k * 1.7)), f: NX_GAIT[Math.floor(t * 9 + k) % 4] }));
     // Reins first, so the animals sit on top of them.
     const rein = (ax, ay, bx, by) => {
       const n = Math.ceil(Math.abs(bx - ax));
@@ -1897,14 +2035,14 @@
         px(ax + (bx - ax) * k, ay + (by - ay) * k + Math.sin(Math.PI * k) * 1.2, '#c9a477');
       }
     };
-    rein(19, 8, deer[0].x + 10, deer[0].y + 8);
-    for (let k = 0; k < 2; k++) rein(deer[k].x + 10, deer[k].y + 8, deer[k + 1].x + 10, deer[k + 1].y + 8);
+    rein(22, 9, deer[0].x + 14, deer[0].y + 9);
+    for (let k = 0; k < 2; k++) rein(deer[k].x + 14, deer[k].y + 9, deer[k + 1].x + 14, deer[k + 1].y + 9);
     sprite(NX_SLEIGH, 0, 0, false);
     deer.forEach((d, k) => {
       sprite(NX_DEER_TOP, d.x, d.y, k === 2);
-      sprite(NX_DEER_LEGS[d.f], d.x, d.y + 12, false);
+      sprite(NX_DEER_LEGS[d.f], d.x, d.y + 14, false);
     });
-    return { nose: { x: deer[2].x + 15.5, y: deer[2].y + 5.5 }, tail: { x: 0, y: 15.5 } };
+    return { nose: { x: deer[2].x + 21.5, y: deer[2].y + 6.5 }, tail: { x: 2, y: 19.5 } };
   }
 
   THEMES.push({
@@ -1933,8 +2071,10 @@
       s.PH = Math.ceil(w.h / s.P);
       s.seed = rint(1, 9999);
       s.art = nxPaint(s.PW, s.PH, s.seed, s.PW >= 180);
+      s.smoke = [];
+      s.puff = 0;
       const n = Math.round(clamp((s.PW * s.PH) / 60, 40, 2000) * (cfg.density || 1));
-      s.santa = { x: -90 * Math.max(1, Math.round(Math.min(s.PH / 90, s.PW / 150))), wait: rnd(1, 2), sparks: [] };
+      s.santa = { x: -115 * Math.max(1, Math.floor(Math.min(s.PH / 150, s.PW / 260))), wait: rnd(1, 2), sparks: [] };
       s.flakes = Array.from({ length: n }, () => ({
         x: rnd(0, s.PW),
         y: rnd(0, s.PH),
@@ -1953,9 +2093,41 @@
 
       // Warm light: windows, lanterns, the star and the glow around the tree.
       for (const g of s.art.glows) {
-        const flick = g.lamp ? 0.06 * Math.sin(t * 3 + g.x) : g.star ? 0.15 * Math.sin(t * 1.7) : 0.04 * Math.sin(t * 2.3 + g.y);
+        const flick = g.moon ? 0 : g.lamp ? 0.06 * Math.sin(t * 3 + g.x) : g.star ? 0.15 * Math.sin(t * 1.7) : 0.04 * Math.sin(t * 2.3 + g.y);
         w.glow(toCell(g.x) - 0.5, toCell(g.y) - 0.5, toCell(g.r), g.c, g.a + flick);
       }
+
+      // A few stars twinkle.
+      c.fillStyle = '#ffffff';
+      for (const st of s.art.twinkles) {
+        const v = Math.max(0, Math.sin(t * st.f + st.ph));
+        if (v < 0.2) continue;
+        c.globalAlpha = v;
+        c.fillRect(Math.round(st.x) * P, Math.round(st.y) * P, P, P);
+        if (v > 0.85) {
+          c.globalAlpha = (v - 0.85) * 4;
+          c.fillRect(Math.round(st.x - 1) * P, Math.round(st.y) * P, P, P);
+          c.fillRect(Math.round(st.x + 1) * P, Math.round(st.y) * P, P, P);
+          c.fillRect(Math.round(st.x) * P, Math.round(st.y - 1) * P, P, P);
+          c.fillRect(Math.round(st.x) * P, Math.round(st.y + 1) * P, P, P);
+        }
+      }
+      c.globalAlpha = 1;
+
+      // Chimney smoke drifting up into the cold air.
+      s.puff = (s.puff || 0) - dt;
+      if (s.puff <= 0) {
+        s.puff = 0.5;
+        for (const ch of s.art.chimneys) s.smoke.push({ x: ch.x, y: ch.y, age: 0, life: rnd(3.5, 5.5), wob: rnd(0, 6) });
+      }
+      for (const p of s.smoke) {
+        p.age += dt;
+        p.y -= dt * 2.6;
+        p.x += dt * (0.8 + Math.sin(t * 0.7 + p.wob) * 0.5 + p.age * 0.3);
+        const k = p.age / p.life;
+        w.glow(toCell(p.x) - 0.5, toCell(p.y) - 0.5, toCell(1.5 + k * 4), '#c7d1ea', 0.5 * (1 - k));
+      }
+      s.smoke = s.smoke.filter((p) => p.age < p.life);
 
       // Twinkling bulbs: each fades on its own beat; the big ones get a halo.
       for (const l of s.art.lights) {
@@ -1970,7 +2142,7 @@
 
       // Santa crosses the sky now and then, leaving a trail of golden sparkles.
       const sa = s.santa;
-      const u = Math.max(1, Math.round(Math.min(s.PH / 90, s.PW / 150)));
+      const u = Math.max(1, Math.floor(Math.min(s.PH / 150, s.PW / 260)));
       if (sa.wait > 0) sa.wait -= dt;
       else {
         sa.x += dt * s.PW * 0.05 * sp;
@@ -1988,7 +2160,7 @@
         if (Math.random() < dt * 40) sa.sparks.push({ x: sa.x + rnd(-1, 3) * u, y: y + at.tail.y * u + rnd(-2, 1) * u, age: 0 });
         w.glow(toCell(sa.x + at.nose.x * u) - 0.5, toCell(y + at.nose.y * u) - 0.5, toCell(3 * u), '#ff3b30', 0.5 + 0.25 * Math.sin(t * 5));
         if (sa.x > s.PW + 10) {
-          sa.x = -90 * u;
+          sa.x = -115 * u;
           sa.wait = rnd(14, 26);
           sa.sparks = [];
         }
