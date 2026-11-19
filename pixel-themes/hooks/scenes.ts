@@ -1061,7 +1061,7 @@ function nxPaint(PW: number, PH: number, seed: number, wide: boolean) {
   // shiny eyes, rosy cheeks and a smile, a knitted beanie with a pompom, a
   // striped scarf, a small round body and stick arms, one waving, with mittens.
   const snowman = (cx: number, gy: number, size: number) => {
-    const u = Math.max(1, Math.round(size / 26));
+    const u = Math.max(1, Math.floor(size / 26));
     const outline = nxHex('#8296c4');
     const coal = nxHex('#1d1a22');
     const P = (x: number, y: number, col: NxRGB) => {
@@ -1136,7 +1136,7 @@ function nxPaint(PW: number, PH: number, seed: number, wide: boolean) {
     lantern(Math.round(PW * 0.28), gl(PW * 0.28), Math.round(PH * 0.2));
     lantern(Math.round(PW * 0.56), gl(PW * 0.56), Math.round(PH * 0.17));
     const tr = tree(PW * 0.85, gl(PW * 0.85) + 2, PH * 0.5);
-    snowman(PW * 0.3, PH * 0.96, PH * 0.3);
+    if (PH >= 80) snowman(PW * 0.3, PH * 0.96, PH * 0.3);
     branch(-2, PH * 0.02, 0.35, PW * 0.32, Math.max(3, PH * 0.025), 0);
     branch(-2, PH * 0.12, 0.15, PW * 0.22, Math.max(2, PH * 0.018), 1);
     branch(PW + 2, PH * 0.02, Math.PI - 0.25, PW * 0.2, Math.max(3, PH * 0.022), 0);
@@ -1147,47 +1147,97 @@ function nxPaint(PW: number, PH: number, seed: number, wide: boolean) {
   house(Math.round(PW * 0.04), Math.round(Math.min(PW * 0.3, PH * 0.55)), Math.round(PH * 0.11));
   lantern(Math.round(PW * 0.42), gl(PW * 0.42), Math.round(PH * 0.14));
   const tr = tree(PW * 0.72, gl(PW * 0.72) + 2, PH * 0.38);
-  snowman(PW * 0.24, PH * 0.95, PH * 0.22);
+  if (PH >= 80) snowman(PW * 0.24, PH * 0.95, Math.min(PH * 0.22, PW * 0.42));
   branch(-2, PH * 0.02, 0.45, PW * 0.5, Math.max(2, PH * 0.015), 1);
   return { img, lights, glows, star: tr };
 }
 
-// Santa's sleigh pulled by three reindeer, facing right; Rudolph leads.
-const NX_DEER = [
-  ['.....A.A', '......AH', 'BBBBBBHN', 'BBBBBB..', 'B..B.B..'],
-  ['.....A.A', '......AH', 'BBBBBBHN', 'BBBBBB..', '.BB..BB.'],
+// Santa's sleigh and three reindeer, facing right, Rudolph in the lead.
+const NX_DEER_TOP = [
+  '..........a...a.',
+  '...........a.aa.',
+  '.......a....aa..',
+  '........a..dbbd.',
+  '.........adbbbbd',
+  '..........dbebbn',
+  '..........dbbbd.',
+  't.ddddddddhbbd..',
+  'tdbbbbbbbbhbd...',
+  'dbbbbbbbbbgBd...',
+  'dBllllllbbBBd...',
+  '.dBBBBBBBBBd....',
 ]
-const NX_SLEIGH = ['...RRW......', '..RRRR......', '..WKKW......', 'S.RRRR..S...', 'SSSSSSSSSS..', '.GGGGGGGGGG.', 'G..........G']
+const NX_DEER_LEGS = [
+  ['.bd.......bd....', 'b..d.....b..d...', 'k...k...k....k..'],
+  ['..bd......bd....', '..bd......bd....', '..kk......kk....'],
+  ['...bd....bd.....', '....b...b.d.....', '....k..k...k....'],
+]
+const NX_SLEIGH = [
+  '............W...............',
+  '...........RRW..............',
+  '..........RRRRR.............',
+  '.........WWWWWWW............',
+  '.........WKKeKKW............',
+  '.........WWKKpKW............',
+  '..gGg....WWWWWWW........SS..',
+  '..GGGqq..RRWWWRR.......SOOS.',
+  '.sssqqqRRRRWWWRRRRmm...S..S.',
+  'sssssssRRRRkkykRRR.....SOS..',
+  'SSSSSSSSSSSSSSSSSSSS...SS...',
+  'SOOOOOOOOOOOOOOOOOOSSSSS....',
+  'SSSSSSSSSSSSSSSSSSSSSSSS....',
+  '.SSSSSSSSSSSSSSSSSSSSSS.....',
+  '...d.............d....d.....',
+  'YYYYYYYYYYYYYYYYYYYYYYYYYY..',
+  '.........................YY.',
+  '........................YY..',
+]
 const NX_SANTA_PAL: Record<string, string> = {
-  R: '#d23a3a', W: '#f6f6f6', K: '#f2c9a0', S: '#b52828', G: '#e8b84a',
-  B: '#7a4a2a', H: '#7a4a2a', A: '#c9a477', N: '#ff3b30',
+  a: '#e2cba0', d: '#3b2418', b: '#8f5d36', B: '#6b4326', l: '#d1a676', e: '#120b08', n: '#2b1a12',
+  h: '#c4303a', g: '#f2c14e', t: '#f3ece2', k: '#24160f',
+  W: '#f7f7f7', R: '#d23a3a', K: '#f2c9a0', p: '#e98a8a', m: '#3f8a4a', y: '#f2c14e',
+  S: '#b52828', O: '#f2c14e', Y: '#e8b84a', s: '#9b7048', q: '#2f8a4a', G: '#d23a3a',
 }
-/** The sleigh as SVG, in units of `u` px, with the reindeer legs in pose `pose`. */
-function nxSantaSvg(u: number, pose: number, part: 'sleigh' | 'deer') {
+const NX_GAIT = [0, 1, 2, 1]
+/** One sprite as SVG paths (one per color), in units of `u` px, offset by (ox, oy) sprite cells. */
+function nxSpriteSvg(rows: string[], u: number, ox: number, oy: number, red = false) {
   const by = new Map<string, string>()
-  const px = (x: number, y: number, col: string) => by.set(col, (by.get(col) ?? '') + `M${r1(x * u)} ${r1(y * u)}h${u}v${u}h-${u}z`)
-  if (part === 'sleigh') {
-    NX_SLEIGH.forEach((row, j) => {
-      for (let i = 0; i < row.length; i++) {
-        const c = NX_SANTA_PAL[row[i] ?? '.']
-        if (c) px(i, j, c)
-      }
-    })
-    for (let i = 10; i < 13 + 2 * 9 + 6; i++) px(i, Math.round(2.5 - (i - 10) * 0.12), '#c9a477')
-  } else {
-    for (let k = 0; k < 3; k++) {
-      const rows = NX_DEER[(pose + k) % 2] ?? []
-      rows.forEach((row, j) => {
-        for (let i = 0; i < row.length; i++) {
-          const ch = row[i] ?? '.'
-          const c = NX_SANTA_PAL[ch]
-          if (c) px(13 + k * 9 + i, Math.round(-2 - k * 0.5) + j, ch === 'N' && k < 2 ? '#5a3a24' : c)
-        }
-      })
+  rows.forEach((row, j) => {
+    for (let i = 0; i < row.length; i++) {
+      const ch = row[i] ?? '.'
+      const col = ch === 'n' && red ? '#ff3b30' : NX_SANTA_PAL[ch]
+      if (col) by.set(col, (by.get(col) ?? '') + `M${r1((ox + i) * u)} ${r1((oy + j) * u)}h${u}v${u}h-${u}z`)
     }
-  }
+  })
   let out = ''
   for (const [c, d] of by) out += `<path fill="${c}" d="${d}"/>`
+  return out
+}
+const dxNose = (u: number) => (31 + 2 * 18 + 15.5) * u
+/** The whole team: reins, sleigh, and reindeer that gallop and bob out of step. */
+function nxTeamSvg(u: number) {
+  const gaitDur = 0.44
+  let reins = ''
+  const rein = (ax: number, ay: number, bx: number, by: number) => {
+    const n = Math.ceil(Math.abs(bx - ax))
+    for (let i = 0; i <= n; i++) {
+      const k = i / n
+      reins += `M${r1(Math.round(ax + (bx - ax) * k) * u)} ${r1(Math.round(ay + (by - ay) * k + Math.sin(Math.PI * k) * 1.2) * u)}h${u}v${u}h-${u}z`
+    }
+  }
+  const dx = (k: number) => 31 + k * 18
+  rein(19, 8, dx(0) + 10, 7)
+  for (let k = 0; k < 2; k++) rein(dx(k) + 10, 7, dx(k + 1) + 10, 7)
+  let out = `<path fill="#c9a477" d="${reins}"/>` + nxSpriteSvg(NX_SLEIGH, u, 0, 0)
+  for (let k = 0; k < 3; k++) {
+    let legs = ''
+    for (let f = 0; f < 3; f++) {
+      const vals = NX_GAIT.map((_, i) => (NX_GAIT[(i + k) % 4] === f ? 1 : 0)).join(';')
+      legs += `<g opacity="0"><animate attributeName="opacity" values="${vals}" calcMode="discrete" dur="${gaitDur}s" repeatCount="indefinite"/>${nxSpriteSvg(NX_DEER_LEGS[f] ?? [], u, dx(k), 11)}</g>`
+    }
+    const bobv = `0 0;0 ${u};0 0`
+    out += `<g><animateTransform attributeName="transform" type="translate" values="${bobv}" dur="${gaitDur * 2}s" begin="-${r1(k * 0.3)}s" repeatCount="indefinite"/>${nxSpriteSvg(NX_DEER_TOP, u, dx(k), -1, k === 2)}${legs}</g>`
+  }
   return out
 }
 
@@ -1233,14 +1283,19 @@ function noel(sc: Scene) {
   })
   groups.forEach((g, i) => sc.add(`<g shape-rendering="crispEdges">${twinkle(1.6 + i * 0.7, i * 0.5, 0.25)}${g.join('')}</g>`))
 
-  // Santa crosses the sky, the reindeer galloping and Rudolph's nose glowing.
+  // Santa crosses the sky, the reindeer galloping and Rudolph's nose glowing,
+  // with golden sparkles twinkling behind the runners.
   {
-    const u = P * Math.max(1, Math.round(PH / 110))
-    const legs = (pose: number, show: string) =>
-      `<g opacity="${show}"><animate attributeName="opacity" values="${show};${show === '1' ? '0' : '1'}" calcMode="discrete" dur=".34s" repeatCount="indefinite"/>${nxSantaSvg(u, pose, 'deer')}</g>`
-    const nose = sc.glow(38.5 * u, -0.5 * u, 3 * u, '#ff3b30', 0.6, twinkle(0.8, 0, 0.4))
-    const inner = bob(nxSantaSvg(u, 0, 'sleigh') + legs(0, '1') + legs(1, '0') + nose, u * 2, 2.6)
-    sc.drift(inner, -45 * u, sc.W + 10 * u, sc.H * 0.17, (sc.W + 55 * u) / (sc.W * 0.045 * 1.6) + 12, sc.rand())
+    const u = P * Math.max(1, Math.round(Math.min(PH / 90, PW / 150)))
+    const nose = sc.glow(dxNose(u), 4.5 * u, 3 * u, '#ff3b30', 0.6, twinkle(0.8, 0, 0.4))
+    let trail = ''
+    for (let i = 0; i < 14; i++) {
+      const x = -i * 3 * u - sc.rnd(0, 2) * u
+      const y = 15 * u + Math.sin(i * 0.9) * 2 * u + i * 0.4 * u
+      trail += `<rect x="${r1(x)}" y="${r1(y)}" width="${u}" height="${u}" fill="${i < 4 ? '#fffbe0' : '#ffe07a'}">${twinkle(0.7 + (i % 3) * 0.3, i * 0.17, 0.1)}</rect>`
+    }
+    const inner = bob(trail + nxTeamSvg(u) + nose, u * 3, 3.2)
+    sc.drift(inner, -90 * u, sc.W + 10 * u, sc.H * 0.13, (sc.W + 100 * u) / (sc.W * 0.05 * 1.6) + 10, sc.rand())
   }
 
   // Snow falling in two layers: a tile of flakes repeated twice, sliding down forever.

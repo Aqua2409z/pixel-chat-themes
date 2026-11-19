@@ -1735,7 +1735,7 @@
     // shiny eyes, rosy cheeks and a smile, a knitted beanie with a pompom, a
     // striped scarf, a small round body and stick arms, one waving, with mittens.
     const snowman = (cx, gy, size) => {
-      const u = Math.max(1, Math.round(size / 26));
+      const u = Math.max(1, Math.floor(size / 26));
       const outline = nxHex('#8296c4');
       const coal = nxHex('#1d1a22');
       const P = (x, y, col) => {
@@ -1810,7 +1810,7 @@
       lantern(Math.round(PW * 0.28), gl(PW * 0.28), Math.round(PH * 0.2));
       lantern(Math.round(PW * 0.56), gl(PW * 0.56), Math.round(PH * 0.17));
       const tr = tree(PW * 0.85, gl(PW * 0.85) + 2, PH * 0.5);
-      snowman(PW * 0.3, PH * 0.96, PH * 0.3);
+      if (PH >= 80) snowman(PW * 0.3, PH * 0.96, PH * 0.3);
       branch(-2, PH * 0.02, 0.35, PW * 0.32, Math.max(3, PH * 0.025), 0);
       branch(-2, PH * 0.12, 0.15, PW * 0.22, Math.max(2, PH * 0.018), 1);
       branch(PW + 2, PH * 0.02, Math.PI - 0.25, PW * 0.2, Math.max(3, PH * 0.022), 0);
@@ -1821,44 +1821,90 @@
     house(Math.round(PW * 0.04), Math.round(Math.min(PW * 0.3, PH * 0.55)), Math.round(PH * 0.11));
     lantern(Math.round(PW * 0.42), gl(PW * 0.42), Math.round(PH * 0.14));
     const tr = tree(PW * 0.72, gl(PW * 0.72) + 2, PH * 0.38);
-    snowman(PW * 0.24, PH * 0.95, PH * 0.22);
+    if (PH >= 80) snowman(PW * 0.24, PH * 0.95, Math.min(PH * 0.22, PW * 0.42));
     branch(-2, PH * 0.02, 0.45, PW * 0.5, Math.max(2, PH * 0.015), 1);
     return { img, lights, glows, star: tr };
   }
 
-  // Santa's sleigh pulled by three reindeer, facing right; Rudolph leads.
-  // Two leg poses alternate so the reindeer gallop.
-  const NX_DEER = [
-    ['.....A.A', '......AH', 'BBBBBBHN', 'BBBBBB..', 'B..B.B..'],
-    ['.....A.A', '......AH', 'BBBBBBHN', 'BBBBBB..', '.BB..BB.'],
+  // Santa's sleigh and three reindeer, facing right, Rudolph in the lead. The
+  // reindeer gallop on a four-step cycle and bob out of step with each other;
+  // reins run from Santa's mitten through the team.
+  const NX_DEER_TOP = [
+    '..........a...a.',
+    '...........a.aa.',
+    '.......a....aa..',
+    '........a..dbbd.',
+    '.........adbbbbd',
+    '..........dbebbn',
+    '..........dbbbd.',
+    't.ddddddddhbbd..',
+    'tdbbbbbbbbhbd...',
+    'dbbbbbbbbbgBd...',
+    'dBllllllbbBBd...',
+    '.dBBBBBBBBBd....',
   ];
-  const NX_SLEIGH = ['...RRW......', '..RRRR......', '..WKKW......', 'S.RRRR..S...', 'SSSSSSSSSS..', '.GGGGGGGGGG.', 'G..........G'];
+  const NX_DEER_LEGS = [
+    ['.bd.......bd....', 'b..d.....b..d...', 'k...k...k....k..'],
+    ['..bd......bd....', '..bd......bd....', '..kk......kk....'],
+    ['...bd....bd.....', '....b...b.d.....', '....k..k...k....'],
+  ];
+  const NX_SLEIGH = [
+    '............W...............',
+    '...........RRW..............',
+    '..........RRRRR.............',
+    '.........WWWWWWW............',
+    '.........WKKeKKW............',
+    '.........WWKKpKW............',
+    '..gGg....WWWWWWW........SS..',
+    '..GGGqq..RRWWWRR.......SOOS.',
+    '.sssqqqRRRRWWWRRRRmm...S..S.',
+    'sssssssRRRRkkykRRR.....SOS..',
+    'SSSSSSSSSSSSSSSSSSSS...SS...',
+    'SOOOOOOOOOOOOOOOOOOSSSSS....',
+    'SSSSSSSSSSSSSSSSSSSSSSSS....',
+    '.SSSSSSSSSSSSSSSSSSSSSS.....',
+    '...d.............d....d.....',
+    'YYYYYYYYYYYYYYYYYYYYYYYYYY..',
+    '.........................YY.',
+    '........................YY..',
+  ];
   const NX_SANTA_PAL = {
-    R: '#d23a3a', W: '#f6f6f6', K: '#f2c9a0', S: '#b52828', G: '#e8b84a',
-    B: '#7a4a2a', H: '#7a4a2a', A: '#c9a477', N: '#5a3a24',
+    a: '#e2cba0', d: '#3b2418', b: '#8f5d36', B: '#6b4326', l: '#d1a676', e: '#120b08', n: '#2b1a12',
+    h: '#c4303a', g: '#f2c14e', t: '#f3ece2', k: '#24160f',
+    W: '#f7f7f7', R: '#d23a3a', K: '#f2c9a0', p: '#e98a8a', m: '#3f8a4a', y: '#f2c14e',
+    S: '#b52828', O: '#f2c14e', Y: '#e8b84a', s: '#9b7048', q: '#2f8a4a', G: '#d23a3a',
   };
-  function nxSanta(c, P, x0, y0, s, frame, rudolph) {
+  const NX_GAIT = [0, 1, 2, 1];
+  function nxTeam(c, P, x0, y0, u, t, noseOn) {
     const px = (x, y, col) => {
       c.fillStyle = col;
-      c.fillRect(Math.round(x0 + x * s) * P, Math.round(y0 + y * s) * P, s * P, s * P);
+      c.fillRect(Math.round(x0 + x * u) * P, Math.round(y0 + y * u) * P, u * P, u * P);
     };
-    NX_SLEIGH.forEach((row, j) => {
-      for (let i = 0; i < row.length; i++) if (NX_SANTA_PAL[row[i]]) px(i, j, NX_SANTA_PAL[row[i]]);
-    });
-    for (let k = 0; k < 3; k++) {
-      const dx = 13 + k * 9;
-      const dy = -2 - k * 0.5;
-      const rows = NX_DEER[(frame + k) % 2];
+    const sprite = (rows, ox, oy, red) =>
       rows.forEach((row, j) => {
         for (let i = 0; i < row.length; i++) {
           const ch = row[i];
-          if (!NX_SANTA_PAL[ch]) continue;
-          px(dx + i, dy + j, ch === 'N' && k === 2 && rudolph ? '#ff3b30' : NX_SANTA_PAL[ch]);
+          const col = ch === 'n' && red ? (noseOn ? '#ff3b30' : '#b8261f') : NX_SANTA_PAL[ch];
+          if (col) px(ox + i, oy + j, col);
         }
       });
-    }
-    // Reins from the sleigh to the lead reindeer.
-    for (let i = 10; i < 13 + 2 * 9 + 6; i++) px(i, 2.5 - (i - 10) * 0.12, '#c9a477');
+    const deer = [0, 1, 2].map((k) => ({ x: 31 + k * 18, y: -1 + Math.round(Math.sin(t * 9 + k * 1.7)), f: NX_GAIT[Math.floor(t * 9 + k) % 4] }));
+    // Reins first, so the animals sit on top of them.
+    const rein = (ax, ay, bx, by) => {
+      const n = Math.ceil(Math.abs(bx - ax));
+      for (let i = 0; i <= n; i++) {
+        const k = i / n;
+        px(ax + (bx - ax) * k, ay + (by - ay) * k + Math.sin(Math.PI * k) * 1.2, '#c9a477');
+      }
+    };
+    rein(19, 8, deer[0].x + 10, deer[0].y + 8);
+    for (let k = 0; k < 2; k++) rein(deer[k].x + 10, deer[k].y + 8, deer[k + 1].x + 10, deer[k + 1].y + 8);
+    sprite(NX_SLEIGH, 0, 0, false);
+    deer.forEach((d, k) => {
+      sprite(NX_DEER_TOP, d.x, d.y, k === 2);
+      sprite(NX_DEER_LEGS[d.f], d.x, d.y + 12, false);
+    });
+    return { nose: { x: deer[2].x + 15.5, y: deer[2].y + 5.5 }, tail: { x: 0, y: 15.5 } };
   }
 
   THEMES.push({
@@ -1888,7 +1934,7 @@
       s.seed = rint(1, 9999);
       s.art = nxPaint(s.PW, s.PH, s.seed, s.PW >= 180);
       const n = Math.round(clamp((s.PW * s.PH) / 60, 40, 2000) * (cfg.density || 1));
-      s.santa = { x: -45 * Math.max(1, Math.round(s.PH / 110)), wait: rnd(2, 4), sparks: [] };
+      s.santa = { x: -90 * Math.max(1, Math.round(Math.min(s.PH / 90, s.PW / 150))), wait: rnd(1, 2), sparks: [] };
       s.flakes = Array.from({ length: n }, () => ({
         x: rnd(0, s.PW),
         y: rnd(0, s.PH),
@@ -1924,28 +1970,30 @@
 
       // Santa crosses the sky now and then, leaving a trail of golden sparkles.
       const sa = s.santa;
-      const ss = Math.max(1, Math.round(s.PH / 110));
+      const u = Math.max(1, Math.round(Math.min(s.PH / 90, s.PW / 150)));
       if (sa.wait > 0) sa.wait -= dt;
       else {
-        sa.x += dt * s.PW * 0.045 * sp;
-        const y = s.PH * 0.17 + Math.sin(sa.x * 0.03) * s.PH * 0.035;
-        if (Math.random() < dt * 30) sa.sparks.push({ x: sa.x + 2 * ss, y: y + 5 * ss, age: 0 });
-        nxSanta(c, P, sa.x, y, ss, Math.floor(t * 6), Math.sin(t * 5) > -0.3);
-        w.glow(toCell(sa.x + 40 * ss) - 0.5, toCell(y - 0.5 * ss) - 0.5, toCell(2.5 * ss), '#ff3b30', 0.45 + 0.2 * Math.sin(t * 5));
+        sa.x += dt * s.PW * 0.05 * sp;
+        const y = s.PH * 0.14 + Math.sin(sa.x * 0.025) * s.PH * 0.035;
+        for (const k of sa.sparks) {
+          k.age += dt;
+          k.y += dt * 3;
+          k.x -= dt * 2;
+          c.globalAlpha = Math.max(0, 1 - k.age / 1.8);
+          c.fillStyle = k.age < 0.4 ? '#fffbe0' : k.age < 1 ? '#ffe07a' : '#e8b84a';
+          c.fillRect(Math.round(k.x) * P, Math.round(k.y) * P, P, P);
+        }
+        c.globalAlpha = 1;
+        const at = nxTeam(c, P, sa.x, y, u, t, Math.sin(t * 5) > -0.3);
+        if (Math.random() < dt * 40) sa.sparks.push({ x: sa.x + rnd(-1, 3) * u, y: y + at.tail.y * u + rnd(-2, 1) * u, age: 0 });
+        w.glow(toCell(sa.x + at.nose.x * u) - 0.5, toCell(y + at.nose.y * u) - 0.5, toCell(3 * u), '#ff3b30', 0.5 + 0.25 * Math.sin(t * 5));
         if (sa.x > s.PW + 10) {
-          sa.x = -45 * ss;
+          sa.x = -90 * u;
           sa.wait = rnd(14, 26);
+          sa.sparks = [];
         }
       }
-      for (const k of sa.sparks) {
-        k.age += dt;
-        k.y += dt * 2;
-        c.globalAlpha = Math.max(0, 1 - k.age / 1.6);
-        c.fillStyle = k.age < 0.5 ? '#fff4c2' : '#ffd34d';
-        c.fillRect(Math.round(k.x) * P, Math.round(k.y) * P, P, P);
-      }
-      c.globalAlpha = 1;
-      sa.sparks = sa.sparks.filter((k) => k.age < 1.6);
+      sa.sparks = sa.sparks.filter((k) => k.age < 1.8);
 
       // Snow: near flakes are bigger, brighter and faster. The pointer blows them aside.
       const m = w.mouse;
