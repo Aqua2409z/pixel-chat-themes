@@ -29,6 +29,7 @@ export const THEMES: Theme[] = [
   { id: 'vn', name: 'Việt Nam', desc: 'cờ đỏ sao vàng tung bay', dark: false, alias: ['co', 'co do', 'co viet nam', 'co do sao vang', 'viet nam', 'vietnam', 'quoc ky', 'to quoc', 'flag'], accent: '#da251d', bubble: '#da251d22' },
   { id: 'sakura', name: 'Sakura Breeze', desc: 'núi Phú Sĩ, cổng Torii, hoa anh đào', dark: false, alias: ['sakura', 'hoa', 'anhdao', 'cherry', 'japan', 'fuji', 'phu si', 'torii'], accent: '#f472b6', bubble: '#f472b622' },
   { id: 'galaxy', name: 'Cosmic Galaxy', desc: 'hố đen vô cực, tinh vân, bụi sao', dark: true, alias: ['galaxy', 'vu tru', 'vutru', 'ngan ha', 'nganha', 'blackhole', 'space', 'sao', 'nebula', 'cosmos'], accent: '#c084fc', bubble: '#c084fc22' },
+  { id: 'hoian', name: 'Hội An', desc: 'đèn lồng, hoa đăng trên sông', dark: true, alias: ['hoi an', 'pho co', 'den long', 'den', 'hoa dang', 'lantern', 'lanterns'], accent: '#ef7d22', bubble: '#ef7d2222' },
 ]
 
 export const byId = (id: string): Theme | undefined => THEMES.find(t => t.id === id)
@@ -1037,6 +1038,125 @@ function galaxy(sc: Scene) {
   }
 }
 
+// Hoi An by night: strings of silk lanterns over the old town, paper flower
+// lanterns (hoa dang) and a sampan drifting down the Hoai river.
+const LANTERN_COLS = [
+  ['#d8342a', '#9f1f18', '#ff6a4d'],
+  ['#ef7d22', '#b9560f', '#ffa95c'],
+  ['#f5bd2e', '#c08d12', '#ffe07a'],
+  ['#e8487f', '#aa2a58', '#ff8db0'],
+  ['#1f9d94', '#13706a', '#56d6c8'],
+] as const
+
+function hoian(sc: Scene) {
+  const c = sc.cell
+  const river = Math.round(sc.rows * 0.74)
+  const houseMax = Math.max(2, Math.min(10, Math.round(sc.rows * 0.16)))
+  const small = sc.rows < 28
+  const lh = small ? 4 : 7
+  const lw = small ? 3 : 5
+  const n = Math.max(1, Math.min(3, Math.round(sc.rows / 22)))
+  const step = Math.max(1, (river - houseMax - 2 - lh - 3) / n)
+
+  // Night sky, river, and the warm haze of the town on the horizon.
+  const sky = sc.id('g')
+  sc.def(`<linearGradient id="${sky}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c0a26"/><stop offset=".5" stop-color="#1f1438"/><stop offset="1" stop-color="#4a2340"/></linearGradient>`)
+  sc.add(`<rect width="${sc.W}" height="${river * c}" fill="url(#${sky})"/>`)
+  const water = sc.id('g')
+  sc.def(`<linearGradient id="${water}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c1a33"/><stop offset="1" stop-color="#0a0a20"/></linearGradient>`)
+  sc.add(`<rect y="${river * c}" width="${sc.W}" height="${sc.H - river * c}" fill="url(#${water})"/>`)
+  sc.add(sc.glow(sc.W * 0.5, river * c, Math.max(sc.W, sc.H) * 0.55, '#ff9a4d', 0.2))
+
+  // Stars twinkle in two groups.
+  const stars: Tile[][] = [[], []]
+  for (let k = Math.max(4, Math.min(50, Math.round((sc.cols * sc.rows) / 160))); k > 0; k--) {
+    sc.pick(stars).push([sc.int(0, sc.cols - 1), sc.int(0, Math.max(0, river - houseMax - 3)), null, '#f4e8d0', sc.pick(['.', '+'])])
+  }
+  stars.forEach((g, i) => sc.add(`<g>${twinkle(3 + i * 1.3, i, 0.2)}${sc.tiles(g)}</g>`))
+
+  // The old town: ochre walls, tiled roofs, lit windows, a stone embankment.
+  const WALLS = [['#3b2a20', '#4a3527'], ['#46321f', '#574027'], ['#33261f', '#433228']] as const
+  const town: Tile[] = []
+  const roofs: Tile[] = []
+  const lit: Tile[][] = [[], [], []]
+  for (let x = sc.int(-4, 0); x < sc.cols; ) {
+    const wd = sc.int(6, 12)
+    const hh = sc.int(Math.ceil(houseMax * 0.5), houseMax)
+    const wall = sc.pick(WALLS)
+    for (let i = x; i < x + wd; i++) for (let y = river - hh; y < river; y++) town.push([i, y, wall[0], wall[1], sc.glyph(i, y)])
+    for (let k = 0; k < 2; k++) for (let i = x - 1 + k * 2; i <= x + wd - k * 2; i++) roofs.push([i, river - hh - 1 - k, k ? '#6d3324' : '#7f3d2a', '#55261a', '='])
+    for (let wx = x + 2; wx < x + wd - 1; wx += 3) {
+      for (let wy = river - hh + 1; wy < river - 1; wy += 3) if (sc.rand() < 0.65) sc.pick(lit).push([wx, wy, '#ffc65c', '#d99a2f', '#'])
+    }
+    x += wd
+  }
+  for (let x = 0; x < sc.cols; x++) town.push([x, river, '#40362f', '#2f2722', '_'])
+  sc.add(sc.tiles(town) + sc.tiles(roofs))
+  lit.forEach((g, i) => sc.add(`<g>${twinkle(4 + i * 1.7, i * 1.3, 0.45)}${sc.tiles(g)}</g>`))
+
+  // Ripples drift one way and back.
+  const ripples: Tile[] = []
+  for (let y = river + 1; y < sc.rows; y++) for (let x = 0; x < sc.cols; x++) if ((x * 11 + y * 5) % 19 === 0) ripples.push([x, y, null, '#6d5a86', '~'])
+  sc.add(`<g opacity=".6"><animateTransform attributeName="transform" type="translate" values="0 0;${c * 2} 0;0 0" dur="9s" repeatCount="indefinite"/>${sc.tiles(ripples)}</g>`)
+
+  // Each color's lantern art lives in <defs>, reused along the strings.
+  const art = LANTERN_COLS.map(col => {
+    const pal: Pal = { L: [col[0], col[1]], B: [col[2], col[0]], c: ['#c9a14a', '#8a6c2a', '='], t: [null, '#e6c36a', '|'] }
+    return sc.defSprite(small ? [' c ', 'LBL', 'LBL', ' t '] : [' ccc ', 'LLLLL', 'LBBBL', 'LBBBL', 'LLLLL', ' ccc ', '  t  '], pal)
+  })
+  const wires: string[] = []
+  const lanterns: string[] = []
+  const shimmer: Tile[][] = [[], [], []]
+  for (let k = 0; k < n; k++) {
+    const y0 = Math.round(k * step)
+    const sag = small ? 1 : sc.rnd(2, 3.2)
+    const alpha = 0.7 + (0.3 * (k + 1)) / n
+    const wire: Tile[] = []
+    const yAt = (x: number) => {
+      const u = (x / Math.max(1, sc.cols)) * 2 - 1
+      return y0 + sag * (1 - u * u)
+    }
+    for (let x = 0; x < sc.cols; x++) wire.push([x, Math.round(yAt(x)), null, '#8d7a68', '-'])
+    wires.push(`<g opacity="${r1(alpha * 0.6)}">${sc.tiles(wire)}</g>`)
+    for (let x = sc.rnd(0, 5); x < sc.cols; x += sc.rnd(9, 14)) {
+      const X = Math.round(x)
+      const Y = Math.round(yAt(x))
+      const i = sc.int(0, LANTERN_COLS.length - 1)
+      const col = LANTERN_COLS[i] ?? LANTERN_COLS[0]
+      const id = art[i] ?? art[0] ?? ''
+      const glow = sc.glow((lw / 2) * c, (lh / 2) * c, c * (small ? 3.5 : 6), col[2], r1(0.34 * alpha), twinkle(sc.rnd(1.8, 3.4), sc.rnd(0, 3), 0.65))
+      lanterns.push(
+        `<g transform="translate(${X * c} ${Y * c})" opacity="${r1(alpha)}"><g><animateTransform attributeName="transform" type="translate" values="${r1(-c * 0.5)} 0;${r1(c * 0.5)} 0;${r1(-c * 0.5)} 0" dur="${r1(sc.rnd(5, 9))}s" begin="-${r1(sc.rnd(0, 9))}s" repeatCount="indefinite"/>${glow}${use(id)}</g></g>`,
+      )
+      // The lantern's light breaks up on the water below it.
+      for (let y = river + 1; y < sc.rows; y++) if (sc.rand() < 0.34) sc.pick(shimmer).push([X + Math.floor(lw / 2) + sc.int(-1, 1), y, col[0], col[1], '~'])
+    }
+  }
+  shimmer.forEach((g, i) => sc.add(`<g opacity=".32"><g>${twinkle(1.6 + i * 0.5, i * 0.4, 0.3)}${sc.tiles(g)}</g></g>`))
+
+  // A sampan, when there is enough river to float it.
+  if (sc.rows - river >= 8) {
+    const pal: Pal = { L: ['#ff6a4d', '#d8342a'], '|': [null, '#a8896a', '|'], r: ['#3a2c22', '#2a1f18'], h: ['#1c1512', '#2c211b'] }
+    const id = sc.defSprite(['          L   ', '    rrrr  |   ', '  rrrrrrrr|   ', 'hhhhhhhhhhhhhh', ' hhhhhhhhhhhh '], pal)
+    const inner = sc.glow(10.5 * c, 0.5 * c, 3.5 * c, '#ff8a4d', 0.42) + use(id)
+    sc.drift(bob(inner, c * 0.5, 3.4), -15 * c, sc.W + c, (river + 1) * c, (sc.W + 16 * c) / (c * 0.5), sc.rand())
+  }
+
+  // Hoa dang: a candle in a paper flower, bobbing downstream.
+  const flowerPals: [string, string][] = [['#ff9fcb', '#d9628f'], ['#fff4ea', '#d8c6b4'], ['#ff8a6b', '#cf5a3e']]
+  const flowers = flowerPals.map(([petal, edge]) =>
+    sc.defSprite([' f ', 'PpP'], { f: ['#fff1a8', '#f2b431', '*'], P: [petal, edge], p: ['#ffd66b', '#d9a22e'] }),
+  )
+  const rows = Array.from({ length: Math.max(3, Math.min(14, Math.round(sc.cols / 9))) }, () => sc.int(river + 1, Math.max(river + 1, sc.rows - 2))).sort((a, b) => a - b)
+  for (const row of rows) {
+    const glow = sc.glow(1.5 * c, c, 3 * c, '#ffbf66', 0.42, twinkle(sc.rnd(0.9, 1.8), sc.rnd(0, 2), 0.6))
+    sc.drift(bob(glow + use(sc.pick(flowers)), c * 0.5, r1(sc.rnd(2.5, 4))), -4 * c, sc.W + c, (row - 1) * c, (sc.W + 5 * c) / (c * sc.rnd(0.3, 0.8)), sc.rand())
+  }
+
+  // Wires and lanterns hang in front of everything else.
+  sc.add(wires.join('') + lanterns.join(''))
+}
+
 /* ----------------------------------------------------------------- entry */
 
 const BUILDERS: Record<string, [glyphs: string, draw: (sc: Scene) => void]> = {
@@ -1051,6 +1171,7 @@ const BUILDERS: Record<string, [glyphs: string, draw: (sc: Scene) => void]> = {
   vn: [':.;', vn],
   sakura: ['*+:.o~°', sakura],
   galaxy: ['·*+°~%#@', galaxy],
+  hoian: ['*+:.', hoian],
 }
 
 const SIZES: Record<Layout, [w: number, h: number, cell: number]> = {

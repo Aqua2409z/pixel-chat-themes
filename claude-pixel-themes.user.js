@@ -2,7 +2,7 @@
 // @name         Pixel Chat Themes
 // @name:vi      Pixel Chat Themes – hình nền pixel cho claude.ai
 // @namespace    https://github.com/aqua2409z/pixel-chat-themes
-// @version      1.5.0
+// @version      1.6.0
 // @description  Animated pixel/ASCII wallpapers behind the claude.ai chat. Type /theme to pick one.
 // @description:vi Hình nền pixel/ASCII chuyển động phía sau khung chat claude.ai. Gõ /theme để chọn.
 // @author       aqua2409z
@@ -1891,6 +1891,193 @@
           w.glyph(mouse.x + Math.cos(a) * 2.8, mouse.y + sy * 1.2, sy > 0 ? '*' : '·', sy > 0 ? '#67e8f9' : '#c4b5fd', sy > 0 ? 0.95 : 0.5);
         }
         w.tile(mouse.x, mouse.y, '#000000', '#67e8f9', '•', 1);
+      }
+    },
+  });
+
+  // Hoi An by night: strings of silk lanterns over the old town, paper flower
+  // lanterns (hoa dang) and a sampan drifting down the Hoai river.
+  const LANTERN_COLS = [
+    ['#d8342a', '#9f1f18', '#ff6a4d'],
+    ['#ef7d22', '#b9560f', '#ffa95c'],
+    ['#f5bd2e', '#c08d12', '#ffe07a'],
+    ['#e8487f', '#aa2a58', '#ff8db0'],
+    ['#1f9d94', '#13706a', '#56d6c8'],
+  ];
+  const lanternPal = (c) => ({
+    L: [c[0], c[1]],
+    B: [c[2], c[0]],
+    c: ['#c9a14a', '#8a6c2a', '='],
+    t: [null, '#e6c36a', '|'],
+  });
+  const LANTERN = sprite([' ccc ', 'LLLLL', 'LBBBL', 'LBBBL', 'LLLLL', ' ccc ', '  t  '], null);
+  const LANTERN_SMALL = sprite([' c ', 'LBL', 'LBL', ' t '], null);
+  const FLOWER = sprite([' f ', 'PpP'], null);
+  const flowerPal = (petal, edge) => ({
+    f: ['#fff1a8', '#f2b431', '*'],
+    P: [petal, edge],
+    p: ['#ffd66b', '#d9a22e'],
+  });
+  const FLOWER_PALS = [flowerPal('#ff9fcb', '#d9628f'), flowerPal('#fff4ea', '#d8c6b4'), flowerPal('#ff8a6b', '#cf5a3e')];
+  const SAMPAN = sprite(['          L   ', '    rrrr  |   ', '  rrrrrrrr|   ', 'hhhhhhhhhhhhhh', ' hhhhhhhhhhhh '], {
+    L: ['#ff6a4d', '#d8342a'],
+    '|': [null, '#a8896a', '|'],
+    r: ['#3a2c22', '#2a1f18'],
+    h: ['#1c1512', '#2c211b'],
+  });
+
+  function hoianGeo(w) {
+    const river = Math.round(w.rows * 0.74);
+    const houseMax = clamp(Math.round(w.rows * 0.16), 2, 10);
+    const small = w.rows < 28;
+    const lh = small ? 4 : 7;
+    const n = clamp(Math.round(w.rows / 22), 1, 3);
+    const roofTop = river - houseMax - 2;
+    return { river, houseMax, small, lh, n, step: Math.max(1, (roofTop - lh - 3) / n) };
+  }
+
+  THEMES.push({
+    id: 'hoian',
+    name: 'Hội An',
+    dark: true,
+    alias: ['hoi an', 'pho co', 'den long', 'den', 'hoa dang', 'lantern', 'lanterns'],
+    glyphs: '*+:.',
+    bg(c, w, h, W) {
+      const g = hoianGeo(W);
+      const ry = g.river * W.cell;
+      vgrad(c, w, ry, ['#0c0a26', '#1f1438', '#4a2340']);
+      const water = c.createLinearGradient(0, ry, 0, h);
+      water.addColorStop(0, '#2c1a33');
+      water.addColorStop(1, '#0a0a20');
+      c.fillStyle = water;
+      c.fillRect(0, ry, w, h - ry);
+      rglow(c, w * 0.5, ry, Math.max(w, h) * 0.55, '#ff9a4d', 0.2);
+    },
+    init(w) {
+      const s = w.s;
+      const g = hoianGeo(w);
+      const C = w.cols;
+
+      s.houses = [];
+      for (let x = rint(-4, 0); x < C; ) {
+        const wd = rint(6, 12);
+        s.houses.push({ x, w: wd, h: rint(Math.ceil(g.houseMax * 0.5), g.houseMax), tone: rint(0, 2) });
+        x += wd;
+      }
+      s.windows = [];
+      for (const hs of s.houses) {
+        for (let wx = hs.x + 2; wx < hs.x + hs.w - 1; wx += 3) {
+          for (let wy = g.river - hs.h + 1; wy < g.river - 1; wy += 3) {
+            if (Math.random() < 0.65) s.windows.push({ x: wx, y: wy, ph: rnd(0, 6), f: rnd(0.4, 1.3) });
+          }
+        }
+      }
+
+      s.strings = [];
+      s.lanterns = [];
+      for (let k = 0; k < g.n; k++) {
+        const str = { y0: Math.round(k * g.step), sag: g.small ? 1 : rnd(2, 3.2), a: 0.55 + (0.3 * (k + 1)) / g.n };
+        s.strings.push(str);
+        for (let x = rnd(0, 5); x < C; x += rnd(9, 14)) {
+          const u = (x / Math.max(1, C)) * 2 - 1;
+          const col = pick(LANTERN_COLS);
+          s.lanterns.push({ x, y: str.y0 + str.sag * (1 - u * u), a: str.a, col, pal: lanternPal(col), ph: rnd(0, 6), seed: rint(1, 99) });
+        }
+      }
+
+      s.stars = Array.from({ length: Math.round(clamp((w.cols * w.rows) / 160, 6, 50)) }, () => ({
+        x: rint(0, C - 1),
+        y: rint(0, Math.max(0, g.river - g.houseMax - 3)),
+        ch: pick(['.', '+', '·']),
+        ph: rnd(0, 6),
+        f: rnd(0.6, 1.8),
+      }));
+
+      const water = w.rows - g.river;
+      s.flowers = Array.from({ length: Math.round(clamp(C / 9, 3, 14)) }, () => ({
+        x: rnd(-3, C),
+        y: rint(g.river + 1, Math.max(g.river + 1, w.rows - 2)),
+        v: rnd(0.3, 0.8),
+        ph: rnd(0, 6),
+        pal: pick(FLOWER_PALS),
+      })).sort((a, b) => a.y - b.y);
+      s.boat = water >= 8 ? { x: rnd(-14, C), y: g.river + 1, v: rnd(0.35, 0.6), ph: rnd(0, 6) } : null;
+    },
+    under(w) {
+      const s = w.s;
+      const g = hoianGeo(w);
+      const WALLS = [['#3b2a20', '#4a3527'], ['#46321f', '#574027'], ['#33261f', '#433228']];
+      for (const hs of s.houses) {
+        const wall = WALLS[hs.tone];
+        for (let x = hs.x; x < hs.x + hs.w; x++) {
+          for (let y = g.river - hs.h; y < g.river; y++) w.tile(x, y, wall[0], wall[1], w.ch(x, y, 51));
+        }
+        // Pitched roof of old tiles, one row narrower on each side per step.
+        for (let k = 0; k < 2; k++) {
+          for (let x = hs.x - 1 + k * 2; x <= hs.x + hs.w - k * 2; x++) w.tile(x, g.river - hs.h - 1 - k, k ? '#6d3324' : '#7f3d2a', '#55261a', '=');
+        }
+      }
+      // Stone embankment, with the town's dark reflection under it.
+      for (let x = 0; x < w.cols; x++) {
+        w.tile(x, g.river, '#40362f', '#2f2722', '_');
+        for (let y = g.river + 1; y < Math.min(w.rows, g.river + 3); y++) w.tile(x, y, '#120d1c', null, '', 0.5 - (y - g.river) * 0.14);
+      }
+      // Wires, sagging between the eaves.
+      for (const str of s.strings) {
+        for (let x = 0; x < w.cols; x++) {
+          const u = (x / Math.max(1, w.cols)) * 2 - 1;
+          w.glyph(x, str.y0 + str.sag * (1 - u * u), '-', '#8d7a68', str.a * 0.6);
+        }
+      }
+    },
+    frame(w, dt) {
+      const s = w.s;
+      const g = hoianGeo(w);
+      const t = w.t;
+      const sp = g.small ? LANTERN_SMALL : LANTERN;
+      const mid = (sp.w - 1) / 2;
+      const tick = Math.floor(t * 4);
+
+      for (const st of s.stars) w.glyph(st.x, st.y, st.ch, '#f4e8d0', 0.2 + 0.6 * (0.5 + 0.5 * Math.sin(t * st.f + st.ph)));
+      for (const wn of s.windows) w.tile(wn.x, wn.y, '#ffc65c', '#d99a2f', '#', 0.55 + 0.35 * Math.sin(t * wn.f + wn.ph));
+
+      // River: slow ripples and the shimmer of every lantern's light.
+      for (let y = g.river + 1; y < w.rows; y++) {
+        const dir = y % 2 ? 1 : -1;
+        for (let x = 0; x < w.cols; x++) {
+          if (hash(Math.floor(x + t * 0.6 * dir), y, 61) < 0.06) w.glyph(x, y, '~', '#6d5a86', 0.6);
+        }
+      }
+      for (const l of s.lanterns) {
+        const x = Math.round(l.x + mid);
+        for (let y = g.river + 1; y < w.rows; y++) {
+          const d = y - g.river;
+          if (hash(x + (d >> 1), y, tick + l.seed) < 0.34) w.tile(x + rint(-1, 1), y, l.col[0], l.col[1], '~', Math.max(0.08, 0.42 - d * 0.018));
+        }
+      }
+
+      if (s.boat) {
+        const b = s.boat;
+        b.x += b.v * dt;
+        if (b.x > w.cols + 1) b.x = -15;
+        const y = b.y + Math.sin(t * 0.9 + b.ph) * 0.4;
+        w.glow(b.x + 10, y, 3.5, '#ff8a4d', 0.4 + 0.08 * Math.sin(t * 3));
+        w.sprite(SAMPAN, b.x, y, { seed: 6 });
+      }
+
+      for (const f of s.flowers) {
+        f.x += f.v * dt;
+        if (f.x > w.cols + 1) f.x = -4;
+        const y = f.y + Math.sin(t * 1.1 + f.ph) * 0.35;
+        w.glow(f.x + 1, y, 3, '#ffbf66', 0.34 + 0.12 * Math.sin(t * 4 + f.ph));
+        w.sprite(FLOWER, f.x, y - 1, { pal: f.pal, seed: 8 });
+      }
+
+      for (const l of s.lanterns) {
+        const sway = Math.sin(t * 0.8 + l.ph) * 0.8;
+        const flick = 0.3 + 0.07 * Math.sin(t * 2.6 + l.ph) + 0.03 * Math.sin(t * 7.3 + l.ph * 2);
+        w.glow(l.x + mid + sway, l.y + sp.h / 2 - 0.5, g.small ? 3.5 : 6, l.col[2], flick * l.a);
+        w.sprite(sp, l.x + sway, l.y, { pal: l.pal, a: l.a, seed: l.seed });
       }
     },
   });

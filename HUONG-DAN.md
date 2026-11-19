@@ -169,10 +169,11 @@ Gõ vào ô chat của tab Code:
 | Lệnh | Kết quả |
 |---|---|
 | `/pixel` | Mở bảng chọn có ảnh thu nhỏ từng theme |
-| `/pixel koi` | Đổi sang Koi Pond (tương tự: `code`, `cloud`, `lagoon`, `jelly`, `boats`, `fireflies`, `moon`, `vn`, `sakura`, `galaxy`) |
+| `/pixel koi` | Đổi sang Koi Pond (tương tự: `code`, `cloud`, `lagoon`, `jelly`, `boats`, `fireflies`, `moon`, `vn`, `sakura`, `galaxy`, `hoian`) |
 | `/pixel viet nam` hoặc `/pixel co` | Đổi sang theme Việt Nam: cờ đỏ sao vàng tung bay |
 | `/pixel sakura` hoặc `/pixel fuji` | Đổi sang Sakura Breeze: núi Phú Sĩ & hoa anh đào |
 | `/pixel galaxy` hoặc `/pixel vu tru` | Đổi sang Cosmic Galaxy: hố đen vô cực & tinh vân |
+| `/pixel hoi an` hoặc `/pixel den long` | Đổi sang Hội An: đèn lồng và hoa đăng trên sông |
 | `/pixel trang`, `/pixel sua`, `/pixel may`… | Đổi theme bằng tên tiếng Việt không dấu |
 | `/pixel side` | Mở khung cảnh cao bên cạnh khung chat |
 | `/pixel band` | Bật/tắt dải cảnh trên ô chat |
