@@ -141,7 +141,7 @@ Trong bảng chọn:
 | **Nút nổi** | Ẩn/hiện nút ô vuông ở cạnh phải |
 | Ô **OFF / Tắt** | Tắt hình nền, trở về giao diện gốc |
 
-Mẹo: theme tối (Koi Pond, Jellyfish, Fireflies, Moonlit, Claude Code) đẹp nhất khi app ở giao diện **Dark**. Theme sáng (Cloud Drift, Honu Lagoon, Paper Boats) hợp giao diện **Light**.
+Mẹo: theme tối (Cosmic Galaxy, Hội An) đẹp nhất khi app ở giao diện **Dark**. Theme sáng (Việt Nam, Sakura Breeze) hợp giao diện **Light**.
 
 ### 3.7. Dùng chung với mod `/pixel`
 
@@ -169,12 +169,12 @@ Gõ vào ô chat của tab Code:
 | Lệnh | Kết quả |
 |---|---|
 | `/pixel` | Mở bảng chọn có ảnh thu nhỏ từng theme |
-| `/pixel koi` | Đổi sang Koi Pond (tương tự: `code`, `cloud`, `lagoon`, `jelly`, `boats`, `fireflies`, `moon`, `vn`, `sakura`, `galaxy`, `hoian`) |
+| `/pixel hoian` | Đổi sang Hội An (tương tự: `vn`, `sakura`, `galaxy`) |
 | `/pixel viet nam` hoặc `/pixel co` | Đổi sang theme Việt Nam: cờ đỏ sao vàng tung bay |
 | `/pixel sakura` hoặc `/pixel fuji` | Đổi sang Sakura Breeze: núi Phú Sĩ & hoa anh đào |
 | `/pixel galaxy` hoặc `/pixel vu tru` | Đổi sang Cosmic Galaxy: hố đen vô cực & tinh vân |
 | `/pixel hoi an` hoặc `/pixel den long` | Đổi sang Hội An: đèn lồng và hoa đăng trên sông |
-| `/pixel trang`, `/pixel sua`, `/pixel may`… | Đổi theme bằng tên tiếng Việt không dấu |
+| `/pixel vu tru`, `/pixel den long`… | Đổi theme bằng tên tiếng Việt không dấu |
 | `/pixel side` | Mở khung cảnh cao bên cạnh khung chat |
 | `/pixel band` | Bật/tắt dải cảnh trên ô chat |
 | `/pixel tint` | Bật/tắt viền màu quanh tin nhắn |

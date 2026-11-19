@@ -181,10 +181,10 @@
           <p>Xong! Phía sau đoạn chat bây giờ là hình nền <b>pixel</b> chuyển động.</p>
           <ul>
             <li>Gõ <kbd>/theme</kbd> vào ô chat để mở bảng chọn, dùng <kbd>←</kbd> <kbd>→</kbd> để xem thử, <kbd>Enter</kbd> để áp dụng, <kbd>Esc</kbd> để đóng.</li>
-            <li>Gõ thẳng tên theme: <code>/theme koi</code>, <code>/theme moon</code>, <code>/theme jelly</code>…</li>
+            <li>Gõ thẳng tên theme: <code>/theme co</code>, <code>/theme sakura</code>, <code>/theme hoi an</code>…</li>
             <li>Trên điện thoại: chạm vào nút ô vuông nhiều màu ở cạnh phải màn hình.</li>
           </ul>
-          <p>Có 12 theme: <b>Cosmic Galaxy</b> (hố đen & lực hấp dẫn tương tác chuột), <b>Việt Nam</b> (cờ đỏ sao vàng trên Vịnh Hạ Long), <b>Hội An</b> (đèn lồng, hoa đăng trên sông), <b>Sakura Breeze</b> (núi Phú Sĩ, cổng Torii, hoa anh đào), Claude Code, Cloud Drift, Honu Lagoon, Koi Pond, Jellyfish, Paper Boats, Fireflies, Moonlit.</p>
+          <p>Có 4 theme: <b>Việt Nam</b> (cờ đỏ sao vàng trên Vịnh Hạ Long), <b>Sakura Breeze</b> (núi Phú Sĩ, cổng Torii, hoa anh đào), <b>Cosmic Galaxy</b> (hố đen & lực hấp dẫn tương tác chuột), <b>Hội An</b> (đèn lồng, hoa đăng trên sông).</p>
         </div>
 
         <div class="msg user"><p>làm sao để có cái này trên claude.ai?</p></div>
@@ -227,9 +227,9 @@
           <p>Một <code>&lt;canvas&gt;</code> toàn màn hình nằm sau trang, vẽ cảnh bằng lưới ô vuông nhỏ, mỗi ô là một ký tự ASCII. Script tìm các nền đặc của trang: nền lớn thì làm trong suốt, khung nhỏ (thanh bên, ô chat, bong bóng tin nhắn) thì thành kính mờ.</p>
           <pre><code>// mỗi theme chỉ là một object
 {
-  id: 'koi', name: 'Koi Pond', dark: true,
+  id: 'hoian', name: 'Hội An', dark: true,
   bg(ctx, w, h) { /* gradient nền */ },
-  init(world) { /* tạo cá, lá sen */ },
+  init(world) { /* tạo nhà, đèn lồng */ },
   frame(world, dt) { /* vẽ một khung hình */ },
 }</code></pre>
           <p>Thử gõ gì đó vào ô chat bên dưới nhé.</p>
