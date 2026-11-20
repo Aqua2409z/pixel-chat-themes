@@ -1463,60 +1463,154 @@
   });
 
   /* --------------------------------------------------------------------- tet */
-  // Tết Việt Nam: Bếp lửa hồng, Nồi bánh chưng đêm 30, Pháo hoa giao thừa rực rỡ, Cành mai đào & Đèn lồng đỏ.
+  // Tết Việt Nam: Bánh chưng xanh, Dưa hấu đỏ, Bao lì xì, Câu đối đỏ, Tràng pháo nổ, Cành mai vàng & Pháo hoa giao thừa.
 
-  const BANH_CHUNG_POT = sprite(
+  const BANH_CHUNG = sprite(
     [
-      '    ==========    ',
-      '   /HHHHHHHHHH\\   ',
-      '  |############|  ',
-      ' ==############== ',
-      '  |############|  ',
-      '  |############|  ',
-      '  |############|  ',
-      '   \\__________/   ',
+      '  llllllllll  ',
+      ' lLLLLYYYYLLLl ',
+      'lLLGGGYYYYGGLLl',
+      'lLLGGGYYYYGGLLl',
+      'lYYYYYRRRRvYYYl',
+      'lYYYYYRRRRvYYYl',
+      'lLLGGGYYYYGGLLl',
+      'lLLGGGYYYYGGLLl',
+      ' lLLLLYYYYLLLl ',
+      '  llllllllll  ',
     ],
     {
-      '=': ['#94a3b8', '#cbd5e1', '='],
-      '/': ['#64748b', '#94a3b8', '/'],
-      '\\': ['#64748b', '#94a3b8', '\\'],
-      '|': ['#475569', '#64748b', '|'],
-      H: ['#334155', '#94a3b8', '='],
-      '#': ['#1e293b', '#475569', '#'],
-      _: ['#334155', '#475569', '_'],
+      l: ['#14532d', '#052e16', '#'], // Viền lá dong xanh sẫm
+      L: ['#15803d', '#14532d', '='], // Mặt lá dong xanh lá
+      G: ['#22c55e', '#16a34a', ':'], // Thân bánh xanh mướt
+      Y: ['#fef08a', '#facc15', '='], // Lạt tre vàng buộc chữ thập
+      R: ['#dc2626', '#b91c1c', '#'], // Tem giấy đỏ dán giữa bánh
+      v: ['#fde047', '#fef08a', '*'], // Chữ vàng may mắn trên tem
     },
   );
 
-  const TET_BRANCH = sprite(
+  const BANH_TET = sprite(
+    [
+      ' lll ',
+      'lYLYl',
+      'lGLGl',
+      'lYLYl',
+      'lGLGl',
+      'lYLYl',
+      'lGLGl',
+      'lYLYl',
+      ' lll ',
+    ],
+    {
+      l: ['#14532d', '#052e16', '#'],
+      L: ['#15803d', '#14532d', '='],
+      G: ['#22c55e', '#16a34a', ':'],
+      Y: ['#fef08a', '#facc15', '='], // Lạt buộc đòn bánh tét
+    },
+  );
+
+  const DUA_HAU = sprite(
+    [
+      '  ssssssssss  ',
+      ' sWWWWWWWWWWs ',
+      'sWWRRRRRRRRWWs',
+      'sWRRRhRRRhRRWs',
+      'sWRRRRRRhRRRWs',
+      'sWRRhRRRRRhRWs',
+      ' sWRRRRRRRRWs ',
+      '  sWWRRRRWWs  ',
+      '    ssssss    ',
+    ],
+    {
+      s: ['#14532d', '#052e16', '#'], // Vỏ dưa xanh thẫm
+      W: ['#dcfce7', '#86efac', '-'], // Cùi dưa trắng xanh
+      R: ['#ef4444', '#dc2626', '#'], // Ruột dưa đỏ tươi
+      h: ['#0f172a', '#020617', '•'], // Hạt dưa đen bóng
+    },
+  );
+
+  const LI_XI = sprite(
+    [
+      '  dddddd  ',
+      ' dDDDDDDd ',
+      ' dDvvvvDd ',
+      ' dDDvvDDd ',
+      ' dDvvvvDd ',
+      ' dDDvvDDd ',
+      ' dDDDDDDd ',
+      '  dddddd  ',
+    ],
+    {
+      d: ['#7f1d1d', '#450a0a', '#'], // Viền bao lì xì
+      D: ['#dc2626', '#b91c1c', '='], // Màu đỏ may mắn
+      v: ['#fde047', '#facc15', '*'], // Chữ vàng Phúc / Lộc
+    },
+  );
+
+  const CAU_DOI = sprite(
+    [
+      '  ====  ',
+      '  |RR|  ',
+      '  |vV|  ',
+      '  |Vv|  ',
+      '  |RR|  ',
+      '  |vV|  ',
+      '  |Vv|  ',
+      '  |RR|  ',
+      '  |vV|  ',
+      '  |Vv|  ',
+      '  |RR|  ',
+      '  ====  ',
+      '   TT   ',
+    ],
+    {
+      '=': ['#451a03', '#271002', '='], // Trục nẹp gỗ
+      '|': ['#7f1d1d', '#450a0a', '|'], // Viền lụa
+      R: ['#dc2626', '#b91c1c', '#'],   // Nền giấy đỏ điều
+      v: ['#fef08a', '#facc15', '*'],   // Thư pháp chữ vàng
+      V: ['#fde047', '#f59e0b', '+'],   // Nét son vàng
+      T: ['#d97706', '#b45309', 'v'],   // Tua rua vàng buông
+    },
+  );
+
+  const TRANG_PHAO = sprite(
+    [
+      '   |   ',
+      '  yPy  ',
+      '  yPy  ',
+      '  yPy  ',
+      '  yPy  ',
+      '  yPy  ',
+      '  yPy  ',
+      '  yPy  ',
+      '   *   ',
+    ],
+    {
+      '|': [null, '#78350f', '|'],     // Dây ngòi pháo
+      y: ['#fef08a', '#f59e0b', '-'], // Đai vàng quả pháo
+      P: ['#dc2626', '#b91c1c', '#'], // Thân pháo đỏ
+      '*': ['#fde047', '#f97316', '*'],// Ngòi đang nổ lách tách
+    },
+  );
+
+  const CANH_MAI = sprite(
     [
       '                                      bbbbbbbbbbbb',
       '                              bbbbbbbbb     bbbbbb',
       '                     bbbbbbbbbb               bbbb',
-      '              MmmM     bbbbb     DddD             ',
-      '      DddD   myYYym     bbb     dfFFfd    MmmM    ',
-      '     dfFFfd   MmmM     bb bb     DddD    myYYym   ',
-      '      DddD            bb   bb             MmmM    ',
-      '            MmmM     bb     bb   DddD             ',
-      '           myYYym   bb       b  dfFFfd    L       ',
-      '            MmmM                DddD     lRl      ',
-      '                                         lRl      ',
-      '                                         lRl      ',
-      '                                          T       ',
+      '              MmmM     bbbbb     MmmM             ',
+      '      MmmM   myYYym     bbb     myYYym    MmmM    ',
+      '     myYYym   MmmM     bb bb     MmmM    myYYym   ',
+      '      MmmM            bb   bb             MmmM    ',
+      '            MmmM     bb     bb   MmmM             ',
+      '           myYYym   bb       b  myYYym            ',
+      '            MmmM                 MmmM             ',
     ],
     {
-      b: ['#451a03', '#271002', '#'],
-      M: ['#d97706', '#b45309', '*'],
-      m: ['#f59e0b', '#fbbf24', '+'],
-      y: ['#fde047', '#fef08a', '°'],
-      Y: ['#ffffff', '#fde047', 'o'],
-      D: ['#db2777', '#be185d', '*'],
-      d: ['#f472b6', '#fb7185', '+'],
-      f: ['#fce7f3', '#fda4af', '°'],
-      F: ['#ffffff', '#fce7f3', 'o'],
-      L: ['#7f1d1d', '#450a0a', '='],
-      R: ['#dc2626', '#ef4444', '#'],
-      l: ['#ef4444', '#f87171', '|'],
-      T: ['#f59e0b', '#d97706', 'v'],
+      b: ['#451a03', '#271002', '#'], // Thân cành gỗ mai già
+      M: ['#d97706', '#b45309', '*'], // Cánh hoa mai vàng sẫm
+      m: ['#f59e0b', '#fbbf24', '+'], // Cánh hoa vàng rực
+      y: ['#fde047', '#fef08a', '°'], // Nhụy hoa tươi
+      Y: ['#ffffff', '#fde047', 'o'], // Tâm nhụy vàng cam
     },
   );
 
@@ -1530,7 +1624,7 @@
   function spawnRocket(w, fromX = null, fromY = null) {
     const pal = pick(FIREWORK_PALS);
     const startX = fromX != null ? fromX : rnd(w.cols * 0.15, w.cols * 0.85);
-    const targetY = rnd(w.rows * 0.12, w.rows * 0.45);
+    const targetY = rnd(w.rows * 0.1, w.rows * 0.42);
     const startY = fromY != null ? fromY : w.rows + 2;
     const speed = rnd(28, 42);
     const ang = fromX != null ? rnd(-0.35, 0.35) : rnd(-0.2, 0.2);
@@ -1575,44 +1669,78 @@
     glyphs: '*+~o:.•#°',
     bg(c, w, h, W) {
       const g = c.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, '#020617');
-      g.addColorStop(0.35, '#081226');
-      g.addColorStop(0.72, '#121e36');
-      g.addColorStop(1, '#1c1917');
+      g.addColorStop(0, '#040614');
+      g.addColorStop(0.35, '#0b1329');
+      g.addColorStop(0.72, '#16223d');
+      g.addColorStop(1, '#1c1614');
       c.fillStyle = g;
       c.fillRect(0, 0, w, h);
 
-      // Warm glow around the hearth area
-      const potX = Math.round(w * (W.cols < 60 ? 0.5 : 0.28));
-      const potY = Math.round(h * 0.82);
-      rglow(c, potX, potY, Math.max(w, h) * 0.38, '#ea580c', 0.32);
-      rglow(c, potX, potY, Math.max(w, h) * 0.18, '#ef4444', 0.4);
+      // Ánh sáng ấm áp từ bàn cỗ Tết
+      const tableX = Math.round(w * (W.cols < 60 ? 0.5 : 0.42));
+      const tableY = Math.round(h * 0.88);
+      rglow(c, tableX, tableY, Math.max(w, h) * 0.45, '#ea580c', 0.25);
+      rglow(c, tableX, tableY, Math.max(w, h) * 0.2, '#f59e0b', 0.35);
     },
     under(w) {
-      // Spring Blossom Branch at top-right
-      const bx = Math.max(0, w.cols - TET_BRANCH.w);
-      w.sprite(TET_BRANCH, bx, 0);
+      // 1. Cành Mai Vàng góc trên bên phải
+      const bx = Math.max(0, w.cols - CANH_MAI.w);
+      w.sprite(CANH_MAI, bx, 0);
 
-      // Bánh Chưng Pot & Firewood at bottom
-      const potX = Math.round(w.cols * (w.cols < 60 ? 0.5 : 0.28));
-      const potY = Math.max(4, w.rows - BANH_CHUNG_POT.h - 3);
+      // 2. Câu Đối Đỏ bên trái hiên nhà
+      const cdx = Math.max(1, Math.round(w.cols * (w.cols < 60 ? 0.02 : 0.05)));
+      w.sprite(CAU_DOI, cdx, 2);
 
-      // Firewood logs under the pot
-      for (let x = potX - 2; x <= potX + BANH_CHUNG_POT.w + 1; x++) {
-        w.tile(x, potY + BANH_CHUNG_POT.h, '#78350f', '#451a03', '=', 0.95);
-        w.tile(x, potY + BANH_CHUNG_POT.h + 1, '#451a03', '#271002', '#', 0.95);
+      // 3. Tràng Pháo Đỏ treo bên phải
+      const phaoX = Math.max(cdx + 12, w.cols - TRANG_PHAO.w - (w.cols < 60 ? 2 : 6));
+      w.sprite(TRANG_PHAO, phaoX, 2);
+
+      // 4. Bàn Gỗ Trưng Bày Bánh Chưng & Dưa Hấu ở đáy
+      const tableY = Math.max(12, w.rows - 10);
+      const startX = Math.round(w.cols * (w.cols < 60 ? 0.15 : 0.25));
+      const endX = Math.min(w.cols - 2, startX + BANH_CHUNG.w + DUA_HAU.w + BANH_TET.w + LI_XI.w + 6);
+
+      // Mặt bàn gỗ & chân bàn
+      for (let x = startX - 2; x <= endX + 2; x++) {
+        w.tile(x, tableY, '#78350f', '#451a03', '=', 0.95);
+        w.tile(x, tableY + 1, '#451a03', '#271002', '#', 0.95);
+        w.tile(x, tableY + 2, '#271002', '#140801', '#', 0.9);
       }
-      w.sprite(BANH_CHUNG_POT, potX, potY);
+
+      // Đặt Bánh Chưng xanh vuông vắn
+      const bcX = startX + 1;
+      const bcY = tableY - BANH_CHUNG.h;
+      w.sprite(BANH_CHUNG, bcX, bcY);
+
+      // Đặt Đòn Bánh Tét dài
+      const btX = bcX + BANH_CHUNG.w + 1;
+      const btY = tableY - BANH_TET.h;
+      w.sprite(BANH_TET, btX, btY);
+
+      // Đặt Miếng Dưa Hấu đỏ cắn miếng
+      const dhX = btX + BANH_TET.w + 1;
+      const dhY = tableY - DUA_HAU.h;
+      w.sprite(DUA_HAU, dhX, dhY);
+
+      // Đặt Phong Bao Lì Xì đỏ may mắn
+      const lxX = dhX + DUA_HAU.w + 1;
+      const lxY = tableY - LI_XI.h;
+      w.sprite(LI_XI, lxX, lxY);
+
+      // Rải vài đồng tiền vàng & xác pháo dưới bàn
+      for (let x = startX; x <= endX; x += rint(3, 7)) {
+        w.tile(x, tableY + 3, '#f59e0b', '#fef08a', pick(['•', '°']), 0.75);
+      }
     },
     init(w) {
       const area = w.cols * w.rows;
       const density = cfg.density || 1.0;
-      const potX = Math.round(w.cols * (w.cols < 60 ? 0.5 : 0.28));
-      const potY = Math.max(4, w.rows - BANH_CHUNG_POT.h - 3);
+      const phaoX = Math.max(12, w.cols - TRANG_PHAO.w - (w.cols < 60 ? 2 : 6));
+      const phaoEndY = 2 + TRANG_PHAO.h - 1;
 
       w.s = {
-        potX,
-        potY,
+        phaoX,
+        phaoEndY,
         stars: Array.from({ length: Math.round(clamp(area / 25, 20, 60) * density) }, () => ({
           x: rnd(0, w.cols),
           y: rnd(0, w.rows * 0.55),
@@ -1628,29 +1756,23 @@
         flashCol: '#ef4444',
         flashX: 0,
         flashY: 0,
-        embers: Array.from({ length: Math.round(22 * density) }, () => ({
-          x: potX + rnd(1, BANH_CHUNG_POT.w - 1),
-          y: potY + BANH_CHUNG_POT.h + rnd(0, 1),
-          vx: rnd(-1.5, 1.5),
-          vy: rnd(-3, -7),
-          life: rnd(0.8, 2.2),
-          maxLife: rnd(1.5, 2.5),
-          color: pick(['#fbbf24', '#f97316', '#ef4444', '#fef08a']),
+        // Xác pháo đỏ rơi rụng từ tràng pháo
+        phaoSparks: Array.from({ length: 16 }, () => ({
+          x: phaoX + rnd(-1.5, 1.5),
+          y: phaoEndY + rnd(0, 1),
+          vx: rnd(-2, 2),
+          vy: rnd(2, 6),
+          life: rnd(0.3, 1.2),
+          color: pick(['#fde047', '#f97316', '#ef4444', '#ffffff']),
+          ch: pick(['*', '·', '+']),
         })),
-        steam: Array.from({ length: Math.round(18 * density) }, () => ({
-          x: potX + rnd(2, BANH_CHUNG_POT.w - 2),
-          y: potY - rnd(0, 2),
-          vx: rnd(-0.6, 0.6),
-          vy: rnd(-1.5, -3.2),
-          life: rnd(1.2, 2.8),
-          maxLife: rnd(2.0, 3.2),
-        })),
-        petals: Array.from({ length: Math.round(clamp(area / 30, 16, 45) * density) }, () => ({
+        // Cánh hoa mai vàng bay phấp phới
+        petals: Array.from({ length: Math.round(clamp(area / 28, 20, 55) * density) }, () => ({
           x: rnd(0, w.cols),
           y: rnd(0, w.rows),
-          vx: rnd(-1.2, -0.4),
-          vy: rnd(0.8, 1.8),
-          color: pick(['#fde047', '#fbbf24', '#f472b6', '#fda4af']),
+          vx: rnd(-1.4, -0.5),
+          vy: rnd(0.7, 1.7),
+          color: pick(['#fde047', '#fbbf24', '#facc15', '#fef08a']),
           ch: pick(['°', '*', '+', '·']),
           ph: Math.random() * Math.PI * 2,
         })),
@@ -1664,133 +1786,77 @@
       const sp = cfg.speed || 1.0;
       const mouse = w.mouse;
       const hasMouse = !!(mouse && mouse.active);
-      const potX = s.potX;
-      const potY = s.potY;
 
-      // Twinkling stars in upper sky
+      // 1. Sao trời xuân lấp lánh
       for (const st of s.stars) {
         const a = 0.35 + 0.55 * (0.5 + 0.5 * Math.sin(t * st.tw + st.ph));
         w.glyph(st.x, st.y, st.ch, st.color, a);
       }
 
-      // 1. Dynamic Leaping Hearth Flames underneath the pot
-      const fireW = BANH_CHUNG_POT.w + 2;
-      const fireBaseY = potY + BANH_CHUNG_POT.h;
-      const hearthBreath = 0.85 + 0.15 * Math.sin(t * 7);
-      w.glow(potX + BANH_CHUNG_POT.w / 2, fireBaseY, fireW * 1.6, '#f97316', 0.42 * hearthBreath);
-      w.glow(potX + BANH_CHUNG_POT.w / 2, fireBaseY - 1, fireW * 0.9, '#ef4444', 0.48 * hearthBreath);
+      // 2. Tràng pháo đỏ đang nổ lách tách ở đuôi
+      const phaoGlow = 0.7 + 0.3 * Math.sin(t * 18);
+      w.glow(s.phaoX + 1, s.phaoEndY, 3.5, '#f59e0b', 0.45 * phaoGlow);
+      w.glyph(s.phaoX + 1, s.phaoEndY, '*', '#fde047', 1.0);
 
-      for (let fx = 0; fx < fireW; fx++) {
-        const colX = potX - 1 + fx;
-        const wave = Math.sin(t * 8 + fx * 1.4) * 1.2 + Math.cos(t * 13 + fx * 2.8) * 0.8;
-        const flameH = Math.max(1, Math.round(2.6 + wave));
-        for (let fy = 0; fy < flameH; fy++) {
-          const cy = fireBaseY - fy;
-          if (cy <= potY) continue;
-          let fgCol = '#ef4444';
-          let bgCol = '#7f1d1d';
-          let ch = '#';
-          if (fy === 0) {
-            fgCol = '#fef08a';
-            bgCol = '#f59e0b';
-            ch = '#';
-          } else if (fy === 1) {
-            fgCol = '#fbbf24';
-            bgCol = '#ea580c';
-            ch = '~';
-          } else {
-            fgCol = '#ef4444';
-            bgCol = null;
-            ch = '^';
-          }
-          w.tile(colX, cy, bgCol, fgCol, ch, 0.92);
-        }
-      }
-
-      // 2. Rising Steam from the Bánh Chưng Pot
-      for (let i = 0; i < s.steam.length; i++) {
-        const p = s.steam[i];
+      // Cập nhật tia lửa pháo & xác pháo rơi
+      for (let i = 0; i < s.phaoSparks.length; i++) {
+        const p = s.phaoSparks[i];
         p.life -= dt * sp;
-        p.x += (p.vx + Math.sin(t * 2 + p.y * 0.4) * 0.35) * dt * sp * 10;
-        p.y += p.vy * dt * sp * 8;
-        if (p.life <= 0 || p.y < potY - 18) {
-          s.steam[i] = {
-            x: potX + rnd(2, BANH_CHUNG_POT.w - 2),
-            y: potY - rnd(0, 1.5),
-            vx: rnd(-0.6, 0.6),
-            vy: rnd(-1.5, -3.2),
-            life: rnd(1.4, 3.0),
-            maxLife: rnd(2.0, 3.2),
+        p.x += p.vx * dt * sp * 4;
+        p.y += p.vy * dt * sp * 4;
+        if (p.life <= 0 || p.y > w.rows) {
+          s.phaoSparks[i] = {
+            x: s.phaoX + rnd(-1.2, 1.2),
+            y: s.phaoEndY + rnd(0, 0.8),
+            vx: rnd(-2.5, 2.5),
+            vy: rnd(2.5, 7),
+            life: rnd(0.4, 1.4),
+            color: pick(['#fde047', '#f97316', '#ef4444', '#ffffff']),
+            ch: pick(['*', '·', '+', '.']),
           };
           continue;
         }
-        const a = clamp((p.life / p.maxLife) * 0.7, 0.05, 0.75);
-        const ch = p.life < p.maxLife * 0.4 ? '·' : p.life < p.maxLife * 0.7 ? '°' : '~';
-        w.glyph(p.x, p.y, ch, '#cbd5e1', a);
+        w.glyph(p.x, p.y, p.ch, p.color, clamp(p.life, 0.1, 1));
       }
 
-      // 3. Glowing Fire Embers
-      for (let i = 0; i < s.embers.length; i++) {
-        const e = s.embers[i];
-        e.life -= dt * sp;
-        e.x += (e.vx + Math.sin(t * 3 + i) * 0.4) * dt * sp * 10;
-        e.y += e.vy * dt * sp * 8;
-        if (e.life <= 0 || e.y < potY - 14) {
-          s.embers[i] = {
-            x: potX + rnd(1, BANH_CHUNG_POT.w - 1),
-            y: fireBaseY + rnd(0, 0.8),
-            vx: rnd(-1.5, 1.5),
-            vy: rnd(-3, -7),
-            life: rnd(0.8, 2.2),
-            maxLife: rnd(1.5, 2.5),
-            color: pick(['#fbbf24', '#f97316', '#ef4444', '#fef08a']),
-          };
-          continue;
-        }
-        const a = clamp(e.life / e.maxLife, 0.1, 1);
-        w.glyph(e.x, e.y, e.life < 0.6 ? '·' : '*', e.color, a);
-      }
-
-      // 4. Falling Spring Blossom Petals (Mai & Đào)
+      // 3. Cánh hoa mai vàng bay lả tả theo làn gió xuân
       for (let i = 0; i < s.petals.length; i++) {
         const pt = s.petals[i];
-        pt.x += (pt.vx + Math.sin(t * 1.8 + pt.ph) * 0.5) * dt * sp * 7;
+        pt.x += (pt.vx + Math.sin(t * 1.8 + pt.ph) * 0.6) * dt * sp * 7;
         pt.y += pt.vy * dt * sp * 6;
         if (pt.y > w.rows + 2 || pt.x < -3) {
-          pt.x = rnd(w.cols * 0.4, w.cols + 4);
+          pt.x = rnd(w.cols * 0.35, w.cols + 4);
           pt.y = rnd(-4, -1);
           pt.ph = Math.random() * Math.PI * 2;
         }
-        w.glyph(pt.x, pt.y, pt.ch, pt.color, 0.85);
+        w.glyph(pt.x, pt.y, pt.ch, pt.color, 0.9);
       }
 
-      // 5. Grand Giao Thừa Fireworks System
+      // 4. Pháo Hoa Giao Thừa rực rỡ nhiều tầng
       s.nextRocket -= dt * sp;
       if (s.nextRocket <= 0) {
         s.rockets.push(spawnRocket(w));
-        s.nextRocket = rnd(1.6, 3.2);
+        s.nextRocket = rnd(1.5, 3.0);
       }
 
-      // Handle sky flash glow from recent explosion
+      // Chớp sáng bầu trời khi pháo nổ
       if (s.flash > 0) {
         s.flash -= dt;
         w.glow(s.flashX, s.flashY, Math.min(w.cols, w.rows) * 0.45, s.flashCol, clamp(s.flash * 0.6, 0, 0.4));
       }
 
-      // Update rockets
+      // Cập nhật tên lửa pháo hoa
       for (let i = s.rockets.length - 1; i >= 0; i--) {
         const rk = s.rockets[i];
         rk.x += rk.vx * dt * sp;
         rk.y += rk.vy * dt * sp;
-        rk.vy += 12 * dt * sp; // slight deceleration
+        rk.vy += 12 * dt * sp;
         rk.life += dt;
 
-        // Spark trail behind rocket
         w.glyph(rk.x, rk.y, '^', '#ffffff', 0.95);
         w.glyph(rk.x - rk.vx * 0.04, rk.y + 1.2, '!', pick(rk.pal.colors), 0.7);
         w.glyph(rk.x - rk.vx * 0.08, rk.y + 2.4, '·', '#f97316', 0.45);
 
-        // Detonation condition
         if (rk.y <= rk.targetY || rk.vy >= -4 || rk.life > 2.0) {
           s.sparks.push(...explodeFirework(rk, w));
           s.flash = 0.28;
@@ -1801,14 +1867,14 @@
         }
       }
 
-      // Update bursting firework sparks
+      // Cập nhật các hạt pháo hoa bung nở
       for (let i = s.sparks.length - 1; i >= 0; i--) {
         const spk = s.sparks[i];
         spk.life -= dt * sp;
         spk.x += spk.vx * dt * sp;
         spk.y += spk.vy * dt * sp;
-        spk.vy += 9.5 * dt * sp; // gravity
-        spk.vx *= 0.96; // drag
+        spk.vy += 9.5 * dt * sp; // trọng lực rơi
+        spk.vx *= 0.96;
 
         if (spk.life <= 0 || spk.y > w.rows + 3) {
           s.sparks.splice(i, 1);
@@ -1820,12 +1886,12 @@
         w.glyph(spk.x, spk.y, ch, spk.color, a);
       }
 
-      // 6. Interactive Mouse FX: Pháo Bông Cầm Tay (Sparkler)
+      // 5. Tương tác chuột - Pháo Bông Que (Sparkler) & Cánh Hoa Mai Vàng
       if (hasMouse) {
         w.glow(mouse.x, mouse.y, 5.0, '#f59e0b', 0.45);
         w.glyph(mouse.x, mouse.y, '★', '#fef08a', 1.0);
 
-        // Emit sparkling sparks from cursor
+        // Bắn tia sáng lách tách quanh con trỏ
         const sparkCount = rint(3, 6);
         for (let k = 0; k < sparkCount; k++) {
           const ang = Math.random() * Math.PI * 2;
@@ -1840,7 +1906,7 @@
           });
         }
 
-        // Periodic celebratory mini rocket when moving mouse
+        // Di chuột nhanh sẽ phóng pháo hoa mini mừng xuân
         s.mouseTimer += dt;
         if (s.mouseTimer > 2.0 && Math.hypot(mouse.vx, mouse.vy) > 0.8) {
           s.rockets.push(spawnRocket(w, mouse.x, mouse.y));
@@ -1848,7 +1914,6 @@
         }
       }
 
-      // Update mouse sparkler particles
       for (let i = s.sparklers.length - 1; i >= 0; i--) {
         const spk = s.sparklers[i];
         spk.life -= dt;
