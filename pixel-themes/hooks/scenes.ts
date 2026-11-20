@@ -1475,6 +1475,25 @@ function nxTeamSvg(u: number) {
   rein(22, 9, dx(0) + 14, 6)
   for (let k = 0; k < 2; k++) rein(dx(k) + 14, 6, dx(k + 1) + 14, 6)
   let out = `<path fill="#c9a477" d="${reins}"/>` + nxSpriteSvg(NX_SLEIGH, u, 0, 0)
+  // A little lantern on the sleigh's curled front.
+  out += nxSpriteSvg(['.o..', 'YYY.', 'YWY.', '.Y..'], u, 28, 7)
+  // Santa waves for a couple of seconds every few seconds: two arm poses swapped quickly.
+  const arm = (pts: number[][]) => {
+    let d = ''
+    let g = ''
+    pts.forEach(([x, y]) => {
+      d += `M${r1(((x ?? 0) - 1) * u)} ${r1((y ?? 0) * u)}h${u}v${u}h-${u}z`
+      const seg = `M${r1((x ?? 0) * u)} ${r1((y ?? 0) * u)}h${u}v${u}h-${u}z`
+      g += seg
+    })
+    const last = pts[3] ?? [0, 0]
+    const mitt = `M${r1((last[0] ?? 0) * u)} ${r1(((last[1] ?? 0) - 1) * u)}h${u}v${u}h-${u}zM${r1(((last[0] ?? 0) + 1) * u)} ${r1((last[1] ?? 0) * u)}h${u}v${u}h-${u}z`
+    return `<path fill="#2a170e" d="${d}"/><path fill="#d23a3a" d="${g}"/><path fill="#2f7a3e" d="${mitt}"/>`
+  }
+  out +=
+    `<g opacity="0"><animate attributeName="opacity" values="1;0" keyTimes="0;.3" calcMode="discrete" dur="6s" repeatCount="indefinite"/>` +
+    `<g><animate attributeName="opacity" values="1;0" calcMode="discrete" dur=".28s" repeatCount="indefinite"/>${arm([[9, 8], [8, 7], [7, 6], [7, 5]])}</g>` +
+    `<g opacity="0"><animate attributeName="opacity" values="0;1" calcMode="discrete" dur=".28s" repeatCount="indefinite"/>${arm([[9, 8], [9, 7], [9, 6], [10, 5]])}</g></g>`
   for (let k = 0; k < 3; k++) {
     let legs = ''
     for (let f = 0; f < 3; f++) {
@@ -1482,7 +1501,9 @@ function nxTeamSvg(u: number) {
       legs += `<g opacity="0"><animate attributeName="opacity" values="${vals}" calcMode="discrete" dur="${gaitDur}s" repeatCount="indefinite"/>${nxSpriteSvg(NX_DEER_LEGS[f] ?? [], u, dx(k), 11)}</g>`
     }
     const bobv = `0 0;0 ${u};0 0`
-    out += `<g><animateTransform attributeName="transform" type="translate" values="${bobv}" dur="${gaitDur * 2}s" begin="-${r1(k * 0.3)}s" repeatCount="indefinite"/>${nxSpriteSvg(NX_DEER_TOP, u, dx(k), -3, k === 2)}${legs}</g>`
+    // Breath puffing from the nose and drifting back in the cold.
+    const puff = `<circle cx="${r1((dx(k) + 22) * u)}" cy="${r1(3 * u)}" r="${r1(u * 1.5)}" fill="#eef3fb" opacity="0"><animate attributeName="opacity" values=".55;0" dur=".9s" begin="-${r1(k * 0.3)}s" repeatCount="indefinite"/><animate attributeName="r" values="${r1(u)};${r1(u * 3)}" dur=".9s" begin="-${r1(k * 0.3)}s" repeatCount="indefinite"/><animate attributeName="cx" values="${r1((dx(k) + 22) * u)};${r1((dx(k) + 17) * u)}" dur=".9s" begin="-${r1(k * 0.3)}s" repeatCount="indefinite"/></circle>`
+    out += `<g><animateTransform attributeName="transform" type="translate" values="${bobv}" dur="${gaitDur * 2}s" begin="-${r1(k * 0.3)}s" repeatCount="indefinite"/>${nxSpriteSvg(NX_DEER_TOP, u, dx(k), -3, k === 2)}${legs}${puff}</g>`
   }
   return out
 }
@@ -1642,8 +1663,38 @@ function noel(sc: Scene) {
       const y = 19 * u + Math.sin(i * 0.9) * 2 * u + i * 0.4 * u
       trail += `<rect x="${r1(x)}" y="${r1(y)}" width="${u}" height="${u}" fill="${i < 4 ? '#fffbe0' : '#ffe07a'}">${twinkle(0.7 + (i % 3) * 0.3, i * 0.17, 0.1)}</rect>`
     }
-    const inner = bob(trail + nxTeamSvg(u) + nose, u * 3, 3.2)
+    const lamp = sc.glow(29.5 * u, 9.5 * u, 4 * u, '#ffc861', 0.5, twinkle(0.9, 0.2, 0.75))
+    const inner = bob(trail + nxTeamSvg(u) + nose + lamp, u * 3, 3.2)
     sc.drift(inner, -115 * u, sc.W + 10 * u, sc.H * 0.13, (sc.W + 125 * u) / (sc.W * 0.05 * 1.6) + 10, sc.rand())
+  }
+
+  // Presents floating down on little parachutes, landing in the village.
+  {
+    const gu = P
+    const sprite = (box: string, rib: string) => {
+      const px = (x: number, y: number, c: string) => `<rect x="${x * gu}" y="${y * gu}" width="${gu}" height="${gu}" fill="${c}"/>`
+      let o = ''
+      ;['.rwr.', 'rwrwr'].forEach((row, j) => {
+        for (let i = 0; i < row.length; i++) if (row[i] !== '.') o += px(i - 2, j - 5, row[i] === 'r' ? '#d23a3a' : '#f6f6f6')
+      })
+      o += px(-2, -3, '#dfe6f2') + px(2, -3, '#dfe6f2') + px(-1, -2, '#dfe6f2') + px(1, -2, '#dfe6f2')
+      for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) o += px(i - 1, j - 1, i === 1 || j === 1 ? rib : box)
+      return o
+    }
+    const boxes: [string, string][] = [['#c8323a', '#f2c14e'], ['#2f7a4a', '#ffffff'], ['#f2c14e', '#c8323a'], ['#4a6fc4', '#f2c14e']]
+    boxes.forEach(([box, rib], i) => {
+      const x = sc.W * (0.15 + 0.2 * i + sc.rnd(-0.05, 0.05))
+      const y0 = sc.H * 0.22
+      const y1 = art.ground(x / P) * P - gu
+      const dur = 16
+      const begin = r1(sc.rnd(0, dur))
+      const sway = r1(gu * 1.6)
+      sc.add(
+        `<g shape-rendering="crispEdges" opacity="0"><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.02;.5;.52;1" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+          `<g><animateTransform attributeName="transform" type="translate" values="${r1(x)} ${r1(y0)};${r1(x)} ${r1(y1)};${r1(x)} ${r1(y1)}" keyTimes="0;.5;1" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+          `<g><animateTransform attributeName="transform" type="translate" values="-${sway} 0;${sway} 0;-${sway} 0" dur="3s" repeatCount="indefinite"/>${sprite(box, rib)}</g></g></g>`,
+      )
+    })
   }
 
   // Snow in depths: far specks, mid flakes and soft round near flakes, each a

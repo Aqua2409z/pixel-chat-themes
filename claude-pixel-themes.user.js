@@ -2109,7 +2109,7 @@
     S: '#c22c2c', s: '#e8b84a', Y: '#e8b84a', r: '#9e1f22', q: '#2f8a4a', d: '#5a3a24',
   };
   const NX_GAIT = [0, 1, 2, 1];
-  function nxTeam(c, P, x0, y0, u, t, noseOn) {
+  function nxTeam(c, P, x0, y0, u, t, noseOn, wave) {
     const px = (x, y, col) => {
       c.fillStyle = col;
       c.fillRect(Math.round(x0 + x * u) * P, Math.round(y0 + y * u) * P, u * P, u * P);
@@ -2134,11 +2134,39 @@
     rein(22, 9, deer[0].x + 14, deer[0].y + 9);
     for (let k = 0; k < 2; k++) rein(deer[k].x + 14, deer[k].y + 9, deer[k + 1].x + 14, deer[k + 1].y + 9);
     sprite(NX_SLEIGH, 0, 0, false);
+    // Santa's free arm, raised to wave: two poses swapped quickly.
+    if (wave) {
+      const up = Math.floor(t * 7) % 2;
+      const arm = up ? [[9, 8], [8, 7], [7, 6], [7, 5]] : [[9, 8], [9, 7], [9, 6], [10, 5]];
+      arm.forEach(([x, y], i) => {
+        px(x - 1, y, '#2a170e');
+        px(x, y, i === 0 ? '#d23a3a' : i < 3 ? '#d23a3a' : '#2f7a3e');
+      });
+      const [hx, hy] = arm[3];
+      px(hx, hy - 1, '#2f7a3e');
+      px(hx + 1, hy, '#2f7a3e');
+    }
+    // A little lantern hanging from the sleigh's curled front.
+    px(29, 7, '#2a170e');
+    px(28, 8, '#b8862a');
+    px(29, 8, '#b8862a');
+    px(30, 8, '#b8862a');
+    px(28, 9, '#b8862a');
+    px(29, 9, '#ffe9a8');
+    px(30, 9, '#b8862a');
+    px(29, 10, '#b8862a');
     deer.forEach((d, k) => {
       sprite(NX_DEER_TOP, d.x, d.y, k === 2);
       sprite(NX_DEER_LEGS[d.f], d.x, d.y + 14, false);
     });
-    return { nose: { x: deer[2].x + 21.5, y: deer[2].y + 6.5 }, tail: { x: 2, y: 19.5 } };
+    return {
+      nose: { x: deer[2].x + 21.5, y: deer[2].y + 6.5 },
+      tail: { x: 2, y: 19.5 },
+      sack: { x: 3, y: 9 },
+      lantern: { x: 29.5, y: 9.5 },
+      noses: deer.map((d) => ({ x: d.x + 22, y: d.y + 6 })),
+      bells: deer.map((d) => ({ x: d.x + 14.5, y: d.y + 10.5 })),
+    };
   }
 
   // Villagers out for an evening stroll, two walking frames each, facing right.
@@ -2204,6 +2232,9 @@
       s.aurImg = s.aurCtx.createImageData(s.AW, s.AH);
       s.meteor = { wait: rnd(4, 9), t: 0, x: 0, y: 0 };
       s.wind = { now: 1.2, target: 1.2, left: rnd(4, 8) };
+      s.gifts = [];
+      s.bursts = [];
+      s.breath = [];
       s.bokeh = Array.from({ length: s.PW >= 180 ? 7 : 3 }, () => ({ x: rnd(0, s.PW), y: rnd(0, s.PH), r: rnd(2.5, 5), v: rnd(3, 6), ph: rnd(0, 6) }));
       s.walkers = s.art.walk.map(([a, b], i) => ({ a, b, x: rnd(a, b), dir: i % 2 ? -1 : 1, v: rnd(2.5, 4), coat: ['#b8323a', '#3b5fa8', '#2f7a4a'][i % 3] }));
       const n = Math.round(clamp((s.PW * s.PH) / 60, 40, 2000) * (cfg.density || 1));
@@ -2383,9 +2414,12 @@
       }
       c.globalAlpha = 1;
 
-      // Santa crosses the sky now and then, leaving a trail of golden sparkles.
+      // Santa crosses the sky now and then: he waves (more so when the pointer
+      // is near), drops presents on little parachutes, the reindeer puff
+      // breath in the cold, and a trail of golden dust and stars follows.
       const sa = s.santa;
       const u = Math.max(1, Math.floor(Math.min(s.PH / 150, s.PW / 260)));
+      const ground = s.art.ground || (() => s.PH * 0.8);
       if (sa.wait > 0) sa.wait -= dt;
       else {
         sa.x += dt * s.PW * 0.05 * sp;
@@ -2394,21 +2428,106 @@
           k.age += dt;
           k.y += dt * 3;
           k.x -= dt * 2;
-          c.globalAlpha = Math.max(0, 1 - k.age / 1.8);
+          c.globalAlpha = Math.max(0, 1 - k.age / 2.2);
           c.fillStyle = k.age < 0.4 ? '#fffbe0' : k.age < 1 ? '#ffe07a' : '#e8b84a';
-          c.fillRect(Math.round(k.x) * P, Math.round(k.y) * P, P, P);
+          const X = Math.round(k.x);
+          const Y = Math.round(k.y);
+          c.fillRect(X * P, Y * P, P, P);
+          if (k.star && k.age < 1.2) {
+            c.fillRect((X - 1) * P, Y * P, P, P);
+            c.fillRect((X + 1) * P, Y * P, P, P);
+            c.fillRect(X * P, (Y - 1) * P, P, P);
+            c.fillRect(X * P, (Y + 1) * P, P, P);
+          }
         }
         c.globalAlpha = 1;
-        const at = nxTeam(c, P, sa.x, y, u, t, Math.sin(t * 5) > -0.3);
-        if (Math.random() < dt * 40) sa.sparks.push({ x: sa.x + rnd(-1, 3) * u, y: y + at.tail.y * u + rnd(-2, 1) * u, age: 0 });
+        const near = m0 => m0 && m0.active && Math.hypot((m0.x * w.cell) / P - (sa.x + 15 * u), (m0.y * w.cell) / P - (y + 8 * u)) < 40 * u;
+        const waving = near(w.mouse) || t % 6 < 1.8;
+        const at = nxTeam(c, P, sa.x, y, u, t, Math.sin(t * 5) > -0.3, waving);
+        if (Math.random() < dt * 45) sa.sparks.push({ x: sa.x + rnd(-1, 3) * u, y: y + at.tail.y * u + rnd(-2, 1) * u, age: 0, star: Math.random() < 0.15 });
         w.glow(toCell(sa.x + at.nose.x * u) - 0.5, toCell(y + at.nose.y * u) - 0.5, toCell(3 * u), '#ff3b30', 0.5 + 0.25 * Math.sin(t * 5));
+        w.glow(toCell(sa.x + at.lantern.x * u) - 0.5, toCell(y + at.lantern.y * u) - 0.5, toCell(4 * u), '#ffc861', 0.5 + 0.1 * Math.sin(t * 7));
+        // Bells catch the light now and then.
+        for (const bl of at.bells) if (Math.sin(t * 3 + bl.x) > 0.96) w.glow(toCell(sa.x + bl.x * u) - 0.5, toCell(y + bl.y * u) - 0.5, toCell(2 * u), '#fff4c2', 0.7);
+        // Breath from each reindeer's nose, left behind in the cold air.
+        sa.breathT = (sa.breathT || 0) - dt;
+        if (sa.breathT <= 0) {
+          sa.breathT = 0.35;
+          for (const n of at.noses) s.breath.push({ x: sa.x + n.x * u, y: y + n.y * u, age: 0 });
+        }
+        // Presents, one every few seconds while he is over the village.
+        sa.giftT = (sa.giftT || rnd(1, 2)) - dt;
+        if (sa.giftT <= 0 && sa.x > s.PW * 0.05 && sa.x < s.PW * 0.85) {
+          sa.giftT = near(w.mouse) ? 0.8 : rnd(2.2, 3.6);
+          s.gifts.push({ x: sa.x + at.sack.x * u, y: y + at.sack.y * u, vy: 0, age: 0, ph: rnd(0, 6), box: pick(['#c8323a', '#2f7a4a', '#f2c14e', '#4a6fc4']), rib: pick(['#f2c14e', '#ffffff', '#c8323a']) });
+        }
         if (sa.x > s.PW + 10) {
           sa.x = -115 * u;
           sa.wait = rnd(14, 26);
           sa.sparks = [];
         }
       }
-      sa.sparks = sa.sparks.filter((k) => k.age < 1.8);
+      sa.sparks = sa.sparks.filter((k) => k.age < 2.2);
+      for (const b of s.breath) {
+        b.age += dt;
+        b.x -= dt * 1.5;
+        b.y -= dt * 0.8;
+        w.glow(toCell(b.x) - 0.5, toCell(b.y) - 0.5, toCell(1 + b.age * 3), '#eef3fb', 0.45 * (1 - b.age / 0.9));
+      }
+      s.breath = s.breath.filter((b) => b.age < 0.9);
+      // Falling presents: a short drop, then the parachute opens and they sway down.
+      for (const g of s.gifts) {
+        g.age += dt;
+        const open = g.age > 0.45;
+        // Free fall at first, then the canopy slows it to a gentle drift.
+        g.vy = open ? g.vy + (5 - g.vy) * Math.min(1, dt * 4) : g.vy + dt * 30;
+        g.y += g.vy * dt;
+        const sway = open ? Math.sin(g.age * 2 + g.ph) * 1.6 : 0;
+        const X = Math.round(g.x + sway);
+        const Y = Math.round(g.y);
+        if (open) {
+          // Canopy in red and white stripes, with two lines to the box.
+          const can = ['.rwr.', 'rwrwr'];
+          can.forEach((row, j) => {
+            for (let i = 0; i < row.length; i++) {
+              if (row[i] === '.') continue;
+              c.fillStyle = row[i] === 'r' ? '#d23a3a' : '#f6f6f6';
+              c.fillRect((X - 2 + i) * P, (Y - 5 + j) * P, P, P);
+            }
+          });
+          c.fillStyle = '#dfe6f2';
+          c.fillRect((X - 2) * P, (Y - 3) * P, P, P);
+          c.fillRect((X + 2) * P, (Y - 3) * P, P, P);
+          c.fillRect((X - 1) * P, (Y - 2) * P, P, P);
+          c.fillRect((X + 1) * P, (Y - 2) * P, P, P);
+        }
+        for (let j = 0; j < 3; j++) {
+          for (let i = 0; i < 3; i++) {
+            c.fillStyle = i === 1 || j === 1 ? g.rib : g.box;
+            c.fillRect((X - 1 + i) * P, (Y - 1 + j) * P, P, P);
+          }
+        }
+        if (g.y >= ground(g.x) - 1) {
+          g.done = true;
+          for (let k = 0; k < 10; k++) {
+            const a = (k / 10) * Math.PI * 2;
+            s.bursts.push({ x: X, y: Y, vx: Math.cos(a) * rnd(6, 12), vy: Math.sin(a) * rnd(6, 12) - 4, age: 0 });
+          }
+        }
+      }
+      s.gifts = s.gifts.filter((g) => !g.done && g.y < s.PH + 5);
+      // Sparkles where a present lands.
+      for (const b of s.bursts) {
+        b.age += dt;
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.vy += dt * 20;
+        c.globalAlpha = Math.max(0, 1 - b.age / 0.8);
+        c.fillStyle = b.age < 0.3 ? '#ffffff' : '#ffe07a';
+        c.fillRect(Math.round(b.x) * P, Math.round(b.y) * P, P, P);
+      }
+      c.globalAlpha = 1;
+      s.bursts = s.bursts.filter((b) => b.age < 0.8);
 
       // Wind: calm most of the time, with a gust every few seconds.
       const wd = s.wind;
