@@ -1435,6 +1435,11 @@ const NX_SANTA_PAL: Record<string, string> = {
   S: '#c22c2c', s: '#e8b84a', Y: '#e8b84a', r: '#9e1f22', q: '#2f8a4a', d: '#5a3a24',
 }
 const NX_GAIT = [0, 1, 2, 1]
+// Two orientations of a six-armed snow crystal, 7 x 7.
+const NX_CRYSTAL = [
+  ['...a...', '.a.a.a.', '..aaa..', 'aaaoaaa', '..aaa..', '.a.a.a.', '...a...'],
+  ['a.....a', '.a.a.a.', '..aaa..', '.aaoaa.', '..aaa..', '.a.a.a.', 'a.....a'],
+]
 // Villagers out for an evening stroll, two walking frames each, facing right.
 const NX_WALKER = [
   ['.hh.', 'hhhh', '.ff.', 'sccs', '.cc.', '.cc.', '.cc.', 'l..l'],
@@ -1641,20 +1646,61 @@ function noel(sc: Scene) {
     sc.drift(inner, -115 * u, sc.W + 10 * u, sc.H * 0.13, (sc.W + 125 * u) / (sc.W * 0.05 * 1.6) + 10, sc.rand())
   }
 
-  // Snow falling in two layers: a tile of flakes repeated twice, sliding down forever.
-  for (const [count, size, secs, op] of [
-    [Math.round((PW * PH) / 110), 1, 14, 0.6],
-    [Math.round((PW * PH) / 320), 2, 8, 0.95],
-  ] as [number, number, number, number][]) {
+  // Snow in depths: far specks, mid flakes and soft round near flakes, each a
+  // tile of flakes repeated twice and sliding down forever, slanted by the wind.
+  for (const [count, kind, secs, op, color] of [
+    [Math.round((PW * PH) / 140), 0, 18, 0.45, '#c9d6f0'],
+    [Math.round((PW * PH) / 200), 1, 12, 0.7, '#ffffff'],
+    [Math.round((PW * PH) / 900), 2, 7.5, 0.95, '#ffffff'],
+  ] as [number, number, number, number, string][]) {
     let d = ''
+    const dot = (x: number, y: number) => {
+      if (kind === 2) d += `M${x} ${y - P}h${P}v${P}h${P}v${P}h-${P}v${P}h-${P}v-${P}h-${P}v-${P}h${P}z`
+      else d += `M${x} ${y}h${P}v${P}h-${P}z`
+    }
     for (let i = 0; i < count; i++) {
       const x = Math.floor(sc.rand() * PW) * P
       const y = Math.floor(sc.rand() * PH) * P
-      d += `M${x} ${y}h${size * P}v${size * P}h-${size * P}zM${x} ${y - sc.H}h${size * P}v${size * P}h-${size * P}z`
+      dot(x, y)
+      dot(x, y - sc.H)
     }
     sc.add(
-      `<g opacity="${op}" shape-rendering="crispEdges"><animateTransform attributeName="transform" type="translate" values="0 0;${r1(P * 6)} ${sc.H}" dur="${secs}s" repeatCount="indefinite"/><path fill="#ffffff" d="${d}"/></g>`,
+      `<g opacity="${op}" shape-rendering="crispEdges"><animateTransform attributeName="transform" type="translate" values="0 0;${r1(P * (4 + kind * 5))} ${sc.H}" dur="${secs}s" repeatCount="indefinite"/><path fill="${color}" d="${d}"/></g>`,
     )
+  }
+
+  // Closest of all: six-armed crystals that turn as they fall and sway in the breeze.
+  {
+    const crystal = (rows: string[]) => {
+      let a = ''
+      let o = ''
+      rows.forEach((row, j) => {
+        for (let i = 0; i < row.length; i++) {
+          const seg = `M${(i - 3) * P} ${(j - 3) * P}h${P}v${P}h-${P}z`
+          if (row[i] === 'a') a += seg
+          else if (row[i] === 'o') o += seg
+        }
+      })
+      return `<path fill="#dbe8ff" d="${a}"/><path fill="#ffffff" d="${o}"/>`
+    }
+    const A = sc.id('cr')
+    const B = sc.id('cr')
+    sc.def(`<g id="${A}">${crystal(NX_CRYSTAL[0] ?? [])}</g><g id="${B}">${crystal(NX_CRYSTAL[1] ?? [])}</g>`)
+    const n = sc.W >= 600 ? 12 : 6
+    for (let i = 0; i < n; i++) {
+      const x = sc.rnd(0, sc.W)
+      const dur = r1(sc.rnd(9, 15))
+      const begin = r1(sc.rnd(0, 15))
+      const turn = r1(sc.rnd(0.7, 1.2))
+      const spin =
+        `<g><animate attributeName="opacity" values="1;0" calcMode="discrete" dur="${turn}s" repeatCount="indefinite"/>${use(A)}</g>` +
+        `<g opacity="0"><animate attributeName="opacity" values="0;1" calcMode="discrete" dur="${turn}s" repeatCount="indefinite"/>${use(B)}</g>`
+      const sway = r1(P * sc.rnd(3, 6))
+      sc.add(
+        `<g shape-rendering="crispEdges" opacity=".9" transform="translate(${r1(x)} 0)"><g><animateTransform attributeName="transform" type="translate" values="0 ${r1(-P * 8)};${r1(P * 14)} ${r1(sc.H + P * 8)}" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+          `<g><animateTransform attributeName="transform" type="translate" values="-${sway} 0;${sway} 0;-${sway} 0" dur="${r1(sc.rnd(3, 5))}s" repeatCount="indefinite"/>${spin}</g></g></g>`,
+      )
+    }
   }
 
   // A few big, out-of-focus flakes close to the viewer.

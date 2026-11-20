@@ -2147,6 +2147,12 @@
     ['.hh.', 'hhhh', '.ff.', 'sccs', '.cc.', '.cc.', '.cc.', '.ll.'],
   ];
 
+  // Two orientations of a six-armed snow crystal, 7 x 7.
+  const NX_CRYSTAL = [
+    ['...a...', '.a.a.a.', '..aaa..', 'aaaoaaa', '..aaa..', '.a.a.a.', '...a...'],
+    ['a.....a', '.a.a.a.', '..aaa..', '.aaoaa.', '..aaa..', '.a.a.a.', 'a.....a'],
+  ];
+
   THEMES.push({
     id: 'noel',
     name: 'Giáng sinh',
@@ -2197,6 +2203,7 @@
       s.aurCtx = s.aur.getContext('2d');
       s.aurImg = s.aurCtx.createImageData(s.AW, s.AH);
       s.meteor = { wait: rnd(4, 9), t: 0, x: 0, y: 0 };
+      s.wind = { now: 1.2, target: 1.2, left: rnd(4, 8) };
       s.bokeh = Array.from({ length: s.PW >= 180 ? 7 : 3 }, () => ({ x: rnd(0, s.PW), y: rnd(0, s.PH), r: rnd(2.5, 5), v: rnd(3, 6), ph: rnd(0, 6) }));
       s.walkers = s.art.walk.map(([a, b], i) => ({ a, b, x: rnd(a, b), dir: i % 2 ? -1 : 1, v: rnd(2.5, 4), coat: ['#b8323a', '#3b5fa8', '#2f7a4a'][i % 3] }));
       const n = Math.round(clamp((s.PW * s.PH) / 60, 40, 2000) * (cfg.density || 1));
@@ -2403,32 +2410,42 @@
       }
       sa.sparks = sa.sparks.filter((k) => k.age < 1.8);
 
-      // Snow: near flakes are bigger, brighter and faster. The pointer blows them aside.
+      // Wind: calm most of the time, with a gust every few seconds.
+      const wd = s.wind;
+      wd.left -= dt;
+      if (wd.left <= 0) {
+        wd.target = Math.random() < 0.35 ? rnd(5, 9) : rnd(0.6, 1.8);
+        wd.left = wd.target > 4 ? rnd(2, 3.5) : rnd(6, 12);
+      }
+      wd.now += (wd.target - wd.now) * Math.min(1, dt * 0.8);
+
+      // Snow in four depths: far specks, mid flakes, near flakes and, closest,
+      // six-armed crystals that turn as they fall. The pointer makes them swirl.
       const m = w.mouse;
       const mx = m && m.active ? (m.x * w.cell) / P : -999;
       const my = m && m.active ? (m.y * w.cell) / P : -999;
-      const rad = Math.max(10, s.PH * 0.1);
-      c.fillStyle = '#ffffff';
+      const rad = Math.max(10, s.PH * 0.11);
       for (const f of s.flakes) {
-        const sz = f.z > 0.85 ? 2 : 1;
-        const v = (4 + f.z * 9) * sp;
+        const layer = f.z < 0.45 ? 0 : f.z < 0.85 ? 1 : f.z < 0.965 ? 2 : 3;
+        const v = (3 + f.z * 10) * sp;
         f.y += v * dt;
-        f.x += (Math.sin(t * 0.8 + f.ph) * (1 + f.z * 2) + 1.2 + f.vx) * dt;
+        f.x += (Math.sin(t * 0.8 + f.ph) * (1 + f.z * 2) + wd.now * (0.4 + f.z) + f.vx) * dt;
         const dx = f.x - mx;
         const dy = f.y - my;
         const d = Math.hypot(dx, dy);
         if (d < rad && d > 0.01) {
-          const k = (1 - d / rad) * 60;
-          f.vx += (dx / d) * k * dt;
-          f.y += (dy / d) * k * dt * 0.5;
+          const k = (1 - d / rad) * 55;
+          // Push outward and around, so the snow whirls about the pointer.
+          f.vx += ((dx / d) * 0.6 - (dy / d) * 0.9) * k * dt;
+          f.y += ((dy / d) * 0.4 + (dx / d) * 0.7) * k * dt;
         }
-        f.vx *= Math.pow(0.15, dt);
-        if (f.y > s.PH + 2) {
-          f.y = -2;
-          f.x = rnd(-10, s.PW);
+        f.vx *= Math.pow(0.2, dt);
+        if (f.y > s.PH + 4) {
+          f.y = -4;
+          f.x = rnd(-20, s.PW);
         }
-        if (f.x > s.PW + 2) f.x -= s.PW + 4;
-        if (f.x < -3) f.x += s.PW + 4;
+        if (f.x > s.PW + 4) f.x -= s.PW + 8;
+        if (f.x < -6) f.x += s.PW + 8;
         let lit = false;
         for (const cn of s.art.cones) {
           if (f.y < cn.top || f.y > cn.bottom) continue;
@@ -2438,9 +2455,32 @@
             break;
           }
         }
-        c.globalAlpha = lit ? 1 : 0.45 + f.z * 0.55;
-        c.fillStyle = lit ? '#ffe7b8' : '#ffffff';
-        c.fillRect(Math.round(f.x) * P, Math.round(f.y) * P, sz * P, sz * P);
+        const X = Math.round(f.x);
+        const Y = Math.round(f.y);
+        if (layer === 3) {
+          // A crystal: two orientations swapped as it turns, catching the light now and then.
+          const art = NX_CRYSTAL[Math.floor(t * 2.2 + f.ph) % 2];
+          const glint = Math.max(0, Math.sin(t * 1.3 + f.ph * 3)) > 0.93;
+          c.globalAlpha = lit || glint ? 1 : 0.85;
+          for (let j = 0; j < art.length; j++) {
+            for (let i = 0; i < art[j].length; i++) {
+              const ch = art[j][i];
+              if (ch === '.') continue;
+              c.fillStyle = ch === 'o' ? '#ffffff' : lit ? '#ffe7b8' : glint ? '#ffffff' : '#dbe8ff';
+              c.fillRect((X + i - 3) * P, (Y + j - 3) * P, P, P);
+            }
+          }
+          if (lit || glint) w.glow(toCell(X) - 0.5, toCell(Y) - 0.5, toCell(4), lit ? '#ffd27a' : '#ffffff', 0.35);
+          continue;
+        }
+        c.globalAlpha = lit ? 1 : [0.35, 0.65, 0.95][layer];
+        c.fillStyle = lit ? '#ffe7b8' : layer === 0 ? '#c9d6f0' : '#ffffff';
+        if (layer === 2) {
+          // A soft round flake: a plus of four pixels around a bright centre.
+          c.fillRect(X * P, (Y - 1) * P, P, P);
+          c.fillRect((X - 1) * P, Y * P, P * 3, P);
+          c.fillRect(X * P, (Y + 1) * P, P, P);
+        } else c.fillRect(X * P, Y * P, P, P);
       }
       c.globalAlpha = 1;
 
