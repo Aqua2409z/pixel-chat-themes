@@ -22,6 +22,7 @@ export const THEMES: Theme[] = [
   { id: 'sakura', name: 'Sakura Breeze', desc: 'núi Phú Sĩ, cổng Torii, hoa anh đào', dark: false, alias: ['sakura', 'hoa', 'anhdao', 'cherry', 'japan', 'fuji', 'phu si', 'torii'], accent: '#f472b6', bubble: '#f472b622' },
   { id: 'galaxy', name: 'Cosmic Galaxy', desc: 'hố đen vô cực, tinh vân, bụi sao', dark: true, alias: ['galaxy', 'vu tru', 'vutru', 'ngan ha', 'nganha', 'blackhole', 'space', 'sao', 'nebula', 'cosmos'], accent: '#c084fc', bubble: '#c084fc22' },
   { id: 'hoian', name: 'Hội An', desc: 'đèn lồng, hoa đăng trên sông', dark: true, alias: ['hoi an', 'pho co', 'den long', 'den', 'hoa dang', 'lantern', 'lanterns'], accent: '#ef7d22', bubble: '#ef7d2222' },
+  { id: 'tet', name: 'Tết Việt Nam', desc: 'nồi bánh chưng, bếp lửa hồng, pháo hoa giao thừa', dark: true, alias: ['tet', 'xuan', 'tet ta', 'banh chung', 'phao hoa', 'giao thua', 'mai dao', 'lunar new year', 'new year'], accent: '#dc2626', bubble: '#dc262622' },
 ]
 
 export const byId = (id: string): Theme | undefined => THEMES.find(t => t.id === id)
@@ -778,6 +779,194 @@ function hoian(sc: Scene) {
   sc.add(wires.join('') + lanterns.join(''))
 }
 
+function tet(sc: Scene) {
+  const c = sc.cell
+  // Spring midnight sky fading to warm earth at hearth base
+  sc.vgrad(['#020617', '#081226', '#111e38', '#1a1816'])
+
+  // Distant subtle stars in the clear spring night
+  const starCount = Math.max(16, Math.min(45, Math.round((sc.cols * sc.rows) / 110)))
+  for (let k = 0; k < starCount; k++) {
+    const sx = r1(sc.rnd(0, sc.W))
+    const sy = r1(sc.rnd(0, sc.H * 0.55))
+    const dur = r1(sc.rnd(2.0, 4.5))
+    const begin = r1(sc.rnd(0, 4.5))
+    const ch = sc.pick(['.', '+', '*', '·'])
+    sc.add(
+      `<g opacity="0.75"><animate attributeName="opacity" values="0.2;1.0;0.2" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+        `<text fill="#fef08a" x="${sx}" y="${sy}">${ch}</text>` +
+      `</g>`
+    )
+  }
+
+  // Grand Fireworks in the Sky (3 distinct bursts)
+  const fwData = [
+    { x: sc.W * 0.68, y: sc.H * 0.22, r: Math.min(sc.W, sc.H) * 0.18, col1: '#ef4444', col2: '#fde047', col3: '#fbbf24', dur: 3.2, begin: 0 },
+    { x: sc.W * 0.38, y: sc.H * 0.16, r: Math.min(sc.W, sc.H) * 0.15, col1: '#10b981', col2: '#38bdf8', col3: '#6ee7b7', dur: 3.6, begin: 1.2 },
+    { x: sc.W * 0.84, y: sc.H * 0.32, r: Math.min(sc.W, sc.H) * 0.14, col1: '#ec4899', col2: '#fef08a', col3: '#f472b6', dur: 3.4, begin: 2.3 },
+  ]
+
+  for (const fw of fwData) {
+    const fx = r1(fw.x)
+    const fy = r1(fw.y)
+    const fr = r1(Math.max(c * 2.5, fw.r))
+    const dur = r1(fw.dur)
+    const begin = r1(fw.begin)
+
+    // Flash glow on explosion
+    sc.add(sc.glow(fx, fy, fr * 1.5, fw.col1, 0.35, `<animate attributeName="opacity" values="0;0.85;0.2;0" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>`))
+
+    // Radiating firework sparks (12 rays)
+    let sparksMarkup = `<g opacity="0.9">` +
+      `<animate attributeName="opacity" values="0;0.1;1.0;0.8;0.2;0" keyTimes="0;0.1;0.25;0.6;0.85;1" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+      `<animateTransform attributeName="transform" type="translate" values="${fx} ${fy}; ${fx} ${r1(fy + fr * 0.3)}" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>`
+
+    const rays = 12
+    for (let i = 0; i < rays; i++) {
+      const ang = (i / rays) * Math.PI * 2
+      const cosA = Math.cos(ang)
+      const sinA = Math.sin(ang)
+      const dist1 = r1(fr * 0.65)
+      const dist2 = r1(fr * 1.05)
+      const x1 = r1(cosA * dist1)
+      const y1 = r1(sinA * dist1)
+      const x2 = r1(cosA * dist2)
+      const y2 = r1(sinA * dist2)
+      const col = i % 2 === 0 ? fw.col1 : fw.col2
+      sparksMarkup += `<circle cx="${x1}" cy="${y1}" r="${r1(c * 0.28)}" fill="${col}"/>`
+      sparksMarkup += `<circle cx="${x2}" cy="${y2}" r="${r1(c * 0.22)}" fill="${fw.col3}"/>`
+      sparksMarkup += `<text fill="${fw.col2}" x="${r1(x2 * 0.8)}" y="${r1(y2 * 0.8)}">*</text>`
+    }
+    sparksMarkup += `</g>`
+    sc.add(sparksMarkup)
+  }
+
+  // Spring Branch (Mai & Đào) + Red Lantern at top right
+  const bx = r1(Math.max(sc.W * 0.55, sc.W - Math.min(sc.W * 0.4, 320)))
+  const branchW = r1(sc.W - bx)
+
+  // Branch stem
+  sc.add(
+    `<path d="M ${r1(bx)} 0 Q ${r1(bx + branchW * 0.4)} ${r1(c * 2)} ${r1(sc.W)} ${r1(c * 0.8)}" fill="none" stroke="#451a03" stroke-width="${r1(c * 0.7)}" stroke-linecap="round"/>` +
+    `<path d="M ${r1(bx + branchW * 0.3)} ${r1(c * 1.6)} Q ${r1(bx + branchW * 0.2)} ${r1(c * 3.5)} ${r1(bx + branchW * 0.15)} ${r1(c * 4.5)}" fill="none" stroke="#451a03" stroke-width="${r1(c * 0.45)}" stroke-linecap="round"/>`
+  )
+
+  // Red Lantern hanging from branch
+  const lx = r1(bx + branchW * 0.15)
+  const ly = r1(c * 4.5)
+  const lSize = r1(Math.max(c * 1.2, 16))
+  sc.add(sc.glow(lx, ly + lSize, lSize * 2.2, '#ef4444', 0.4, `<animate attributeName="opacity" values="0.7;1.0;0.7" dur="2s" repeatCount="indefinite"/>`))
+  sc.add(
+    `<g>` +
+      `<animateTransform attributeName="transform" type="rotate" values="-3 ${lx} ${ly}; 3 ${lx} ${ly}; -3 ${lx} ${ly}" dur="3.5s" repeatCount="indefinite"/>` +
+      `<line x1="${lx}" y1="${ly}" x2="${lx}" y2="${r1(ly + lSize * 0.4)}" stroke="#7f1d1d" stroke-width="${r1(c * 0.2)}"/>` +
+      `<rect x="${r1(lx - lSize * 0.5)}" y="${r1(ly + lSize * 0.4)}" width="${lSize}" height="${r1(lSize * 1.2)}" rx="${r1(lSize * 0.3)}" fill="#dc2626" stroke="#ef4444" stroke-width="${r1(c * 0.2)}"/>` +
+      `<ellipse cx="${lx}" cy="${r1(ly + lSize)}" rx="${r1(lSize * 0.28)}" ry="${r1(lSize * 0.55)}" fill="none" stroke="#fbbf24" stroke-width="${r1(c * 0.18)}"/>` +
+      `<line x1="${lx}" y1="${r1(ly + lSize * 1.6)}" x2="${lx}" y2="${r1(ly + lSize * 2.2)}" stroke="#f59e0b" stroke-width="${r1(c * 0.25)}"/>` +
+    `</g>`
+  )
+
+  // Apricot & Peach flowers along branch
+  const flowers = [
+    { x: bx + branchW * 0.1, y: c * 1.8, col: '#fde047', ch: '°' },
+    { x: bx + branchW * 0.25, y: c * 2.4, col: '#fbbf24', ch: '*' },
+    { x: bx + branchW * 0.4, y: c * 1.9, col: '#f472b6', ch: '+' },
+    { x: bx + branchW * 0.55, y: c * 2.6, col: '#fde047', ch: '*' },
+    { x: bx + branchW * 0.7, y: c * 1.4, col: '#fb7185', ch: '°' },
+    { x: bx + branchW * 0.85, y: c * 1.2, col: '#fde047', ch: '*' },
+  ]
+  for (const f of flowers) {
+    sc.add(`<circle cx="${r1(f.x)}" cy="${r1(f.y)}" r="${r1(c * 0.5)}" fill="${f.col}"/>`)
+    sc.add(`<text fill="#ffffff" x="${r1(f.x)}" y="${r1(f.y + c * 0.3)}" text-anchor="middle" font-size="${r1(c * 0.8)}">${f.ch}</text>`)
+  }
+
+  // Falling blossom petals
+  for (let m = 0; m < 5; m++) {
+    const px0 = r1(sc.rnd(sc.W * 0.4, sc.W * 0.95))
+    const py0 = r1(sc.rnd(c * 2, sc.H * 0.3))
+    const dur = r1(sc.rnd(5.0, 9.0))
+    const begin = r1(sc.rnd(0, 9.0))
+    const col = m % 2 === 0 ? '#fde047' : '#f472b6'
+    sc.add(
+      `<g opacity="0.8">` +
+        `<animateTransform attributeName="transform" type="translate" from="${px0} ${py0}" to="${r1(px0 - sc.W * 0.35)} ${r1(py0 + sc.H * 0.65)}" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+        `<text fill="${col}" x="0" y="0">°</text>` +
+      `</g>`
+    )
+  }
+
+  // Hearth & Bánh Chưng Pot (Bottom)
+  const potX = r1(sc.W * (sc.cols < 45 ? 0.5 : 0.32))
+  const potY = r1(sc.H * 0.76)
+  const potW = r1(Math.max(c * 4, Math.min(sc.W, sc.H) * 0.16))
+  const potH = r1(potW * 0.85)
+
+  // Warm hearth glow
+  sc.add(sc.glow(potX, potY + potH * 0.4, potW * 2.8, '#f97316', 0.46, `<animate attributeName="opacity" values="0.75;1.0;0.8;0.95;0.75" dur="0.8s" repeatCount="indefinite"/>`))
+  sc.add(sc.glow(potX, potY + potH * 0.4, potW * 1.5, '#ef4444', 0.52))
+
+  // Firewood logs
+  sc.add(
+    `<rect x="${r1(potX - potW * 0.75)}" y="${r1(potY + potH * 0.42)}" width="${r1(potW * 1.5)}" height="${r1(c * 0.8)}" rx="${r1(c * 0.3)}" fill="#78350f"/>` +
+    `<rect x="${r1(potX - potW * 0.6)}" y="${r1(potY + potH * 0.65)}" width="${r1(potW * 1.2)}" height="${r1(c * 0.75)}" rx="${r1(c * 0.25)}" fill="#451a03"/>`
+  )
+
+  // Flickering Flames under the Pot
+  sc.add(
+    `<g>` +
+      `<animate attributeName="opacity" values="0.75;1;0.82;0.95;0.75" dur="0.45s" repeatCount="indefinite"/>` +
+      `<path d="M ${r1(potX - potW * 0.55)} ${r1(potY + potH * 0.45)} Q ${r1(potX - potW * 0.25)} ${r1(potY + potH * 0.05)} ${potX} ${r1(potY + potH * 0.45)} Q ${r1(potX + potW * 0.3)} ${r1(potY + potH * 0.1)} ${r1(potX + potW * 0.55)} ${r1(potY + potH * 0.45)} Z" fill="#ef4444"/>` +
+      `<path d="M ${r1(potX - potW * 0.38)} ${r1(potY + potH * 0.45)} Q ${r1(potX - potW * 0.12)} ${r1(potY + potH * 0.18)} ${potX} ${r1(potY + potH * 0.45)} Q ${r1(potX + potW * 0.18)} ${r1(potY + potH * 0.2)} ${r1(potX + potW * 0.38)} ${r1(potY + potH * 0.45)} Z" fill="#f97316"/>` +
+      `<path d="M ${r1(potX - potW * 0.22)} ${r1(potY + potH * 0.45)} Q ${potX} ${r1(potY + potH * 0.26)} ${r1(potX + potW * 0.22)} ${r1(potY + potH * 0.45)} Z" fill="#fef08a"/>` +
+    `</g>`
+  )
+
+  // Bánh Chưng Pot (Metallic container with lid & handles)
+  sc.add(
+    `<g>` +
+      `<rect x="${r1(potX - potW * 0.5)}" y="${r1(potY - potH * 0.5)}" width="${potW}" height="${potH}" rx="${r1(c * 0.4)}" fill="#334155" stroke="#64748b" stroke-width="${r1(c * 0.35)}"/>` +
+      `<line x1="${r1(potX - potW * 0.48)}" y1="${potY}" x2="${r1(potX + potW * 0.48)}" y2="${potY}" stroke="#475569" stroke-width="${r1(c * 0.25)}"/>` +
+      `<ellipse cx="${potX}" cy="${r1(potY - potH * 0.5)}" rx="${r1(potW * 0.52)}" ry="${r1(potH * 0.16)}" fill="#475569" stroke="#94a3b8" stroke-width="${r1(c * 0.3)}"/>` +
+      `<path d="M ${r1(potX - potW * 0.5)} ${r1(potY - potH * 0.52)} L ${r1(potX + potW * 0.5)} ${r1(potY - potH * 0.57)}" stroke="#cbd5e1" stroke-width="${r1(c * 0.4)}" stroke-linecap="round"/>` +
+      `<path d="M ${r1(potX - potW * 0.52)} ${r1(potY - potH * 0.12)} Q ${r1(potX - potW * 0.72)} ${potY} ${r1(potX - potW * 0.52)} ${r1(potY + potH * 0.12)}" fill="none" stroke="#94a3b8" stroke-width="${r1(c * 0.3)}"/>` +
+      `<path d="M ${r1(potX + potW * 0.52)} ${r1(potY - potH * 0.12)} Q ${r1(potX + potW * 0.72)} ${potY} ${r1(potX + potW * 0.52)} ${r1(potY + potH * 0.12)}" fill="none" stroke="#94a3b8" stroke-width="${r1(c * 0.3)}"/>` +
+    `</g>`
+  )
+
+  // Rising Steam from the Pot
+  for (let s = 0; s < 3; s++) {
+    const sx0 = r1(potX + (s - 1) * c * 1.5)
+    const sy0 = r1(potY - potH * 0.55)
+    const dur = r1(2.2 + s * 0.5)
+    const begin = r1(s * 0.8)
+    sc.add(
+      `<g opacity="0.7">` +
+        `<animateTransform attributeName="transform" type="translate" from="0 0" to="${r1((s - 1) * c * 2)} -${r1(potH * 0.8)}" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+        `<animate attributeName="opacity" values="0.7;0.8;0.3;0" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+        `<text fill="#e2e8f0" x="${sx0}" y="${sy0}">~</text>` +
+      `</g>`
+    )
+  }
+
+  // Rising Embers popping from the fire
+  for (let e = 0; e < 6; e++) {
+    const ex0 = r1(potX + sc.rnd(-potW * 0.4, potW * 0.4))
+    const ey0 = r1(potY + potH * 0.4)
+    const driftX = r1(sc.rnd(-c * 3, c * 3))
+    const driftY = r1(sc.rnd(c * 4, c * 9))
+    const dur = r1(sc.rnd(1.5, 3.0))
+    const begin = r1(sc.rnd(0, 3.0))
+    const col = e % 2 === 0 ? '#fbbf24' : '#f97316'
+    sc.add(
+      `<g opacity="0.85">` +
+        `<animateTransform attributeName="transform" type="translate" from="0 0" to="${driftX} -${driftY}" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+        `<animate attributeName="opacity" values="1.0;0.8;0" dur="${dur}s" begin="-${begin}s" repeatCount="indefinite"/>` +
+        `<text fill="${col}" x="${ex0}" y="${ey0}">·</text>` +
+      `</g>`
+    )
+  }
+}
+
 /* ----------------------------------------------------------------- entry */
 
 const BUILDERS: Record<string, [glyphs: string, draw: (sc: Scene) => void]> = {
@@ -785,6 +974,7 @@ const BUILDERS: Record<string, [glyphs: string, draw: (sc: Scene) => void]> = {
   sakura: ['*+:.o~°', sakura],
   galaxy: ['·*+°~%#@', galaxy],
   hoian: ['*+:.', hoian],
+  tet: ['*+~o:.•#°', tet],
 }
 
 const SIZES: Record<Layout, [w: number, h: number, cell: number]> = {

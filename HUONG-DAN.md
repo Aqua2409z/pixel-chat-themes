@@ -169,11 +169,12 @@ Gõ vào ô chat của tab Code:
 | Lệnh | Kết quả |
 |---|---|
 | `/pixel` | Mở bảng chọn có ảnh thu nhỏ từng theme |
-| `/pixel hoian` | Đổi sang Hội An (tương tự: `vn`, `sakura`, `galaxy`) |
+| `/pixel hoian` | Đổi sang Hội An (tương tự: `vn`, `sakura`, `galaxy`, `tet`) |
 | `/pixel viet nam` hoặc `/pixel co` | Đổi sang theme Việt Nam: cờ đỏ sao vàng tung bay |
 | `/pixel sakura` hoặc `/pixel fuji` | Đổi sang Sakura Breeze: núi Phú Sĩ & hoa anh đào |
 | `/pixel galaxy` hoặc `/pixel vu tru` | Đổi sang Cosmic Galaxy: hố đen vô cực & tinh vân |
 | `/pixel hoi an` hoặc `/pixel den long` | Đổi sang Hội An: đèn lồng và hoa đăng trên sông |
+| `/pixel tet` hoặc `/pixel xuan` | Đổi sang Tết Việt Nam: nồi bánh chưng, bếp lửa hồng & pháo hoa |
 | `/pixel vu tru`, `/pixel den long`… | Đổi theme bằng tên tiếng Việt không dấu |
 | `/pixel side` | Mở khung cảnh cao bên cạnh khung chat |
 | `/pixel band` | Bật/tắt dải cảnh trên ô chat |

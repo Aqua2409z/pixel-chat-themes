@@ -91,7 +91,7 @@ test('a theme kept from an earlier session comes back, and Vietnamese names work
   }
 
   // Each theme answers to its Vietnamese names.
-  for (const [typed, id] of [['vietnam', 'vn'], ['Việt Nam', 'vn'], ['co', 'vn'], ['sakura', 'sakura'], ['anh đào', 'sakura'], ['galaxy', 'galaxy'], ['vu tru', 'galaxy'], ['ngân hà', 'galaxy'], ['Hội An', 'hoian'], ['den long', 'hoian'], ['hoa', 'sakura']] as const) {
+  for (const [typed, id] of [['vietnam', 'vn'], ['Việt Nam', 'vn'], ['co', 'vn'], ['sakura', 'sakura'], ['anh đào', 'sakura'], ['galaxy', 'galaxy'], ['vu tru', 'galaxy'], ['ngân hà', 'galaxy'], ['Hội An', 'hoian'], ['den long', 'hoian'], ['hoa', 'sakura'], ['tet', 'tet'], ['tết', 'tet'], ['banh chung', 'tet']] as const) {
     await $.command.run(pixel(typed))
     expect((store.get('prefs') as { theme: string }).theme).toBe(id)
   }
