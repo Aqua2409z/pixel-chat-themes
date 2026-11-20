@@ -9,7 +9,7 @@
       "name": "pixel-themes",
       "source": "./pixel-themes",
       "description": "Pixel/ASCII wallpapers for Claude Code: animated scene above the prompt, a side pane, themed message colors. Run /pixel.",
-      "version": "2.1.0"
+      "version": "2.0.0"
     }
   ]
 }
