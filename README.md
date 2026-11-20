@@ -1,6 +1,6 @@
 # Pixel Chat Themes
 
-Hình nền **pixel / ASCII chuyển động** phía sau khung chat của Claude, lấy cảm hứng từ [Claudinho](https://github.com/Lu1sR0/claudinho) của Luis Roberto (xem mục [Ghi nguồn](#ghi-nguồn)). Có 4 cảnh: cờ Việt Nam tung bay trên Vịnh Hạ Long, hoa anh đào & núi Phú Sĩ, hố đen & dải ngân hà Cosmic Galaxy, và đèn lồng phố cổ Hội An. Miễn phí, mã nguồn mở, không thu thập dữ liệu.
+Hình nền **pixel / ASCII chuyển động** phía sau khung chat của Claude, lấy cảm hứng từ [Claudinho](https://github.com/Lu1sR0/claudinho) của Luis Roberto (xem mục [Ghi nguồn](#ghi-nguồn)). Có 5 cảnh: cờ Việt Nam tung bay trên Vịnh Hạ Long, hoa anh đào & núi Phú Sĩ, hố đen & dải ngân hà Cosmic Galaxy, đèn lồng phố cổ Hội An, và làng tuyết đêm Giáng sinh. Miễn phí, mã nguồn mở, không thu thập dữ liệu.
 
 ![Bảng chọn /theme](preview.png)
 
@@ -28,6 +28,7 @@ App Claude trên điện thoại (cài từ App Store / CH Play) không cho cài
 | Sakura Breeze | `/theme sakura` hoặc `/theme fuji` | Núi Phú Sĩ tuyết trắng, cổng Torii đỏ son, cành hoa anh đào cổ thụ nở rộ, đèn lồng đung đưa và cánh hoa bay theo gió |
 | Cosmic Galaxy | `/theme galaxy` hoặc `/theme vu tru` | Hố đen Gargantua & đĩa bồi tụ uốn cong không gian, tinh vân đa sắc, sao băng và lực hấp dẫn tương tác chuột |
 | Hội An | `/theme hoi an` hoặc `/theme den long` | Phố cổ về đêm, dây đèn lồng đung đưa, hoa đăng và thuyền trôi trên sông |
+| Giáng sinh | `/theme noel` hoặc `/theme giang sinh` | Làng tuyết dưới trăng và cực quang, cây thông Noel rực đèn, người tuyết, ông già Noel cưỡi xe tuần lộc thả quà treo dù, tuyết rơi nhiều lớp với tinh thể tuyết xoay |
 
 Trong tab Code của app Desktop thì dùng `/pixel` thay cho `/theme` (ví dụ `/pixel hoian`).
 
@@ -56,7 +57,7 @@ Trong bảng chọn còn có:
 - **Chuyển động**: tắt để nền đứng yên (đỡ tốn pin).
 - **Nút nổi**: ẩn/hiện nút ở cạnh phải.
 
-Theme tối (Cosmic Galaxy, Hội An) đẹp nhất khi claude.ai ở giao diện **Dark**, theme sáng thì hợp giao diện **Light**. Nếu không khớp, script tự phủ thêm lớp mờ để chữ vẫn đọc được.
+Theme tối (Cosmic Galaxy, Hội An, Giáng sinh) đẹp nhất khi claude.ai ở giao diện **Dark**, theme sáng thì hợp giao diện **Light**. Nếu không khớp, script tự phủ thêm lớp mờ để chữ vẫn đọc được.
 
 ## Cách hoạt động
 
@@ -132,6 +133,7 @@ Cảm ơn Luis Roberto vì ý tưởng ban đầu. Nếu bạn dùng Windows và
 | Sakura Breeze | [aqua2409z](https://github.com/Aqua2409z) |
 | Cosmic Galaxy | [aqua2409z](https://github.com/Aqua2409z) |
 | Hội An | [windpham95-wq](https://github.com/windpham95-wq) ([#7](https://github.com/aqua2409z/pixel-chat-themes/pull/7)) |
+| Giáng sinh | [aqua2409z](https://github.com/Aqua2409z) |
 
 Cảm ơn mọi người đã đóng góp. Muốn có tên ở đây? Gửi một theme mới qua Pull request.
 
@@ -150,7 +152,7 @@ Pull request luôn được chào đón. Nhánh `main` được bảo vệ, nên
 <details>
 <summary><b>English</b></summary>
 
-**Pixel Chat Themes** adds animated pixel/ASCII wallpapers behind the Claude chat: 4 scenes (Vietnam's flag waving over Ha Long Bay, Sakura Breeze over Mt. Fuji, a cosmic galaxy with a black hole, and Hoi An's lanterns by night).
+**Pixel Chat Themes** adds animated pixel/ASCII wallpapers behind the Claude chat: 5 scenes (Vietnam's flag waving over Ha Long Bay, Sakura Breeze over Mt. Fuji, a cosmic galaxy with a black hole, Hoi An's lanterns by night, and a snowy Christmas village with Santa's sleigh).
 
 - **claude.ai in a browser** (desktop, iPhone Safari, Android Firefox): install a userscript manager (Tampermonkey, Userscripts, Violentmonkey), then open the [install link](https://raw.githubusercontent.com/aqua2409z/pixel-chat-themes/main/claude-pixel-themes.user.js). Type `/theme` or press `Alt+T`.
 - **Claude Desktop, Code tab**: **+** → **Plugins** → **Add marketplace** `aqua2409z/pixel-chat-themes` → install **pixel-themes**, then run `/pixel`. Plugins can only draw a strip above the prompt, a side pane and message frames.
@@ -158,7 +160,7 @@ Pull request luôn được chào đón. Nhánh `main` được bảo vệ, nên
 
 Inspired by [Claudinho](https://github.com/Lu1sR0/claudinho) by Luis Roberto: early versions had 8 themes that followed its theme names and scene ideas; those themes have since been removed. The code here was written separately.
 
-Contributors: Viet Nam, Sakura Breeze and Cosmic Galaxy by aqua2409z; Hoi An by windpham95-wq. Pull requests are welcome.
+Contributors: Viet Nam, Sakura Breeze, Cosmic Galaxy and Christmas by aqua2409z; Hoi An by windpham95-wq. Pull requests are welcome.
 
 MIT licensed.
 

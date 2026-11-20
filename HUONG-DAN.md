@@ -141,7 +141,7 @@ Trong bảng chọn:
 | **Nút nổi** | Ẩn/hiện nút ô vuông ở cạnh phải |
 | Ô **OFF / Tắt** | Tắt hình nền, trở về giao diện gốc |
 
-Mẹo: theme tối (Cosmic Galaxy, Hội An) đẹp nhất khi app ở giao diện **Dark**. Theme sáng (Việt Nam, Sakura Breeze) hợp giao diện **Light**.
+Mẹo: theme tối (Cosmic Galaxy, Hội An, Giáng sinh) đẹp nhất khi app ở giao diện **Dark**. Theme sáng (Việt Nam, Sakura Breeze) hợp giao diện **Light**.
 
 ### 3.7. Dùng chung với mod `/pixel`
 
@@ -169,11 +169,12 @@ Gõ vào ô chat của tab Code:
 | Lệnh | Kết quả |
 |---|---|
 | `/pixel` | Mở bảng chọn có ảnh thu nhỏ từng theme |
-| `/pixel hoian` | Đổi sang Hội An (tương tự: `vn`, `sakura`, `galaxy`) |
+| `/pixel hoian` | Đổi sang Hội An (tương tự: `vn`, `sakura`, `galaxy`, `noel`) |
 | `/pixel viet nam` hoặc `/pixel co` | Đổi sang theme Việt Nam: cờ đỏ sao vàng tung bay |
 | `/pixel sakura` hoặc `/pixel fuji` | Đổi sang Sakura Breeze: núi Phú Sĩ & hoa anh đào |
 | `/pixel galaxy` hoặc `/pixel vu tru` | Đổi sang Cosmic Galaxy: hố đen vô cực & tinh vân |
 | `/pixel hoi an` hoặc `/pixel den long` | Đổi sang Hội An: đèn lồng và hoa đăng trên sông |
+| `/pixel noel` hoặc `/pixel giang sinh` | Đổi sang Giáng sinh: làng tuyết, cây thông Noel, ông già Noel |
 | `/pixel vu tru`, `/pixel den long`… | Đổi theme bằng tên tiếng Việt không dấu |
 | `/pixel side` | Mở khung cảnh cao bên cạnh khung chat |
 | `/pixel band` | Bật/tắt dải cảnh trên ô chat |
