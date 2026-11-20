@@ -1364,7 +1364,7 @@ function nxPaint(PW: number, PH: number, seed: number, wide: boolean) {
     branch(-2, PH * 0.02, 0.35, PW * 0.32, Math.max(3, PH * 0.025), 0);
     branch(-2, PH * 0.12, 0.15, PW * 0.22, Math.max(2, PH * 0.018), 1);
     branch(PW + 2, PH * 0.02, Math.PI - 0.25, PW * 0.2, Math.max(3, PH * 0.022), 0);
-    return { img, over, lights, glows, star: tr, twinkles, chimneys, cones, glints, walk: [[PW * 0.3, PW * 0.58], [PW * 0.6, PW * 0.78]], ground };
+    return { img, over, lights, glows, star: tr, twinkles, chimneys, cones, glints, walk: [[PW * 0.41, PW * 0.55], [PW * 0.6, PW * 0.73]], keepOut: [[PW * 0.18, PW * 0.41], [PW * 0.74, PW * 1.02]], ground };
   }
   pool(PW * 0.72, gl(PW * 0.72) + PH * 0.03, PW * 0.3, PH * 0.05, 0.7);
   pool(PW * 0.42, gl(PW * 0.42) + PH * 0.03, PW * 0.18, PH * 0.04, 0.7);
@@ -1379,7 +1379,7 @@ function nxPaint(PW: number, PH: number, seed: number, wide: boolean) {
   const tr = tree(PW * 0.72, gl(PW * 0.72) + 2, PH * 0.38);
   if (PH >= 80) snowman(PW * 0.24, PH * 0.95, Math.min(PH * 0.22, PW * 0.42));
   branch(-2, PH * 0.02, 0.45, PW * 0.5, Math.max(2, PH * 0.015), 1);
-  return { img, over, lights, glows, star: tr, twinkles, chimneys, cones, glints, walk: [[PW * 0.36, PW * 0.6]], ground };
+  return { img, over, lights, glows, star: tr, twinkles, chimneys, cones, glints, walk: [[PW * 0.4, PW * 0.47]], keepOut: [[PW * 0.06, PW * 0.4], [PW * 0.5, PW * 1.02]], ground };
 }
 
 // Santa's sleigh and three reindeer, facing right, Rudolph in the lead.
@@ -1683,7 +1683,11 @@ function noel(sc: Scene) {
     }
     const boxes: [string, string][] = [['#c8323a', '#f2c14e'], ['#2f7a4a', '#ffffff'], ['#f2c14e', '#c8323a'], ['#4a6fc4', '#f2c14e']]
     boxes.forEach(([box, rib], i) => {
-      const x = sc.W * (0.15 + 0.2 * i + sc.rnd(-0.05, 0.05))
+      // Land only on open snow: not on the snowman, not on the pile under the tree.
+      const free = (px: number) => !art.keepOut.some(([a, b]) => px / P > (a ?? 0) - 3 && px / P < (b ?? 0) + 3)
+      let x = sc.W * (0.05 + 0.23 * i + sc.rnd(0, 0.08))
+      for (let tries = 0; tries < 20 && !free(x); tries++) x = sc.W * sc.rnd(0.02, 0.98)
+      if (!free(x)) return
       const y0 = sc.H * 0.22
       const y1 = art.ground(x / P) * P - gu
       const dur = 16

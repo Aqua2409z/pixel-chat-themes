@@ -2036,7 +2036,7 @@
       branch(-2, PH * 0.02, 0.35, PW * 0.32, Math.max(3, PH * 0.025), 0);
       branch(-2, PH * 0.12, 0.15, PW * 0.22, Math.max(2, PH * 0.018), 1);
       branch(PW + 2, PH * 0.02, Math.PI - 0.25, PW * 0.2, Math.max(3, PH * 0.022), 0);
-      return { img, over, lights, glows, star: tr, twinkles, chimneys, cones, glints, walk: [[PW * 0.3, PW * 0.58], [PW * 0.6, PW * 0.78]], ground };
+      return { img, over, lights, glows, star: tr, twinkles, chimneys, cones, glints, walk: [[PW * 0.41, PW * 0.55], [PW * 0.6, PW * 0.73]], keepOut: [[PW * 0.18, PW * 0.41], [PW * 0.74, PW * 1.02]], ground };
     }
     pool(PW * 0.72, gl(PW * 0.72) + PH * 0.03, PW * 0.3, PH * 0.05, 0.7);
     pool(PW * 0.42, gl(PW * 0.42) + PH * 0.03, PW * 0.18, PH * 0.04, 0.7);
@@ -2051,7 +2051,7 @@
     const tr = tree(PW * 0.72, gl(PW * 0.72) + 2, PH * 0.38);
     if (PH >= 80) snowman(PW * 0.24, PH * 0.95, Math.min(PH * 0.22, PW * 0.42));
     branch(-2, PH * 0.02, 0.45, PW * 0.5, Math.max(2, PH * 0.015), 1);
-    return { img, over, lights, glows, star: tr, twinkles, chimneys, cones, glints, walk: [[PW * 0.36, PW * 0.6]], ground };
+    return { img, over, lights, glows, star: tr, twinkles, chimneys, cones, glints, walk: [[PW * 0.4, PW * 0.47]], keepOut: [[PW * 0.06, PW * 0.4], [PW * 0.5, PW * 1.02]], ground };
   }
 
   // Santa's sleigh and three reindeer, facing right, Rudolph in the lead. The
@@ -2457,9 +2457,11 @@
         }
         // Presents, one every few seconds while he is over the village.
         sa.giftT = (sa.giftT || rnd(1, 2)) - dt;
-        if (sa.giftT <= 0 && sa.x > s.PW * 0.05 && sa.x < s.PW * 0.85) {
+        const dropX = sa.x + at.sack.x * u;
+        const clear = !(s.art.keepOut || []).some(([a, b]) => dropX > a - 3 && dropX < b + 3);
+        if (sa.giftT <= 0 && clear && dropX > s.PW * 0.03) {
           sa.giftT = near(w.mouse) ? 0.8 : rnd(2.2, 3.6);
-          s.gifts.push({ x: sa.x + at.sack.x * u, y: y + at.sack.y * u, vy: 0, age: 0, ph: rnd(0, 6), box: pick(['#c8323a', '#2f7a4a', '#f2c14e', '#4a6fc4']), rib: pick(['#f2c14e', '#ffffff', '#c8323a']) });
+          s.gifts.push({ x: dropX, y: y + at.sack.y * u, vy: 0, age: 0, ph: rnd(0, 6), box: pick(['#c8323a', '#2f7a4a', '#f2c14e', '#4a6fc4']), rib: pick(['#f2c14e', '#ffffff', '#c8323a']) });
         }
         if (sa.x > s.PW + 10) {
           sa.x = -115 * u;
