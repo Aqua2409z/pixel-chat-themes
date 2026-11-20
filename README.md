@@ -1,6 +1,6 @@
 # Pixel Chat Themes
 
-Hình nền **pixel / ASCII chuyển động** phía sau khung chat của Claude, lấy cảm hứng từ [Claudinho](https://github.com/Lu1sR0/claudinho) của Luis Roberto (xem mục [Ghi nguồn](#ghi-nguồn)). Có 5 cảnh: Tết Việt Nam (nồi bánh chưng & pháo hoa giao thừa), cờ Việt Nam tung bay trên Vịnh Hạ Long, hoa anh đào & núi Phú Sĩ, hố đen & dải ngân hà Cosmic Galaxy, và đèn lồng phố cổ Hội An. Miễn phí, mã nguồn mở, không thu thập dữ liệu.
+Hình nền **pixel / ASCII chuyển động** phía sau khung chat của Claude, lấy cảm hứng từ [Claudinho](https://github.com/Lu1sR0/claudinho) của Luis Roberto (xem mục [Ghi nguồn](#ghi-nguồn)). Có 4 cảnh: cờ Việt Nam tung bay trên Vịnh Hạ Long, hoa anh đào & núi Phú Sĩ, hố đen & dải ngân hà Cosmic Galaxy, và đèn lồng phố cổ Hội An. Miễn phí, mã nguồn mở, không thu thập dữ liệu.
 
 ![Bảng chọn /theme](preview.png)
 
@@ -28,7 +28,6 @@ App Claude trên điện thoại (cài từ App Store / CH Play) không cho cài
 | Sakura Breeze | `/theme sakura` hoặc `/theme fuji` | Núi Phú Sĩ tuyết trắng, cổng Torii đỏ son, cành hoa anh đào cổ thụ nở rộ, đèn lồng đung đưa và cánh hoa bay theo gió |
 | Cosmic Galaxy | `/theme galaxy` hoặc `/theme vu tru` | Hố đen Gargantua & đĩa bồi tụ uốn cong không gian, tinh vân đa sắc, sao băng và lực hấp dẫn tương tác chuột |
 | Hội An | `/theme hoi an` hoặc `/theme den long` | Phố cổ về đêm, dây đèn lồng đung đưa, hoa đăng và thuyền trôi trên sông |
-| Tết Việt Nam | `/theme tet` hoặc `/theme xuan` | Bếp lửa hồng bập bùng, nồi bánh chưng đêm 30 nghi ngút khói, pháo hoa giao thừa rực rỡ, cành mai đào & pháo bông que chuột |
 
 Trong tab Code của app Desktop thì dùng `/pixel` thay cho `/theme` (ví dụ `/pixel hoian`).
 
@@ -43,7 +42,7 @@ Trong tab Code của app Desktop thì dùng `/pixel` thay cho `/theme` (ví dụ
 | `/theme co`, `/theme sakura`, `/theme galaxy`, `/theme hoi an`, `/theme off` | Đổi thẳng theo tên hoặc tên tiếng Việt không dấu |
 | `Alt + Shift + →` / `←` | Chuyển nhanh sang theme tiếp theo / trước đó |
 | `Alt + T` | Mở/đóng bảng chọn |
-| Rê chuột trên màn hình | Tương tác với cảnh: thổi bay cánh hoa (Sakura Breeze), kéo xoáy hấp dẫn quanh hố đen (Cosmic Galaxy), pháo bông que & bắn pháo hoa (Tết Việt Nam) |
+| Rê chuột trên màn hình | Tương tác với cảnh: thổi bay cánh hoa (Sakura Breeze), kéo xoáy hấp dẫn quanh hố đen (Cosmic Galaxy) |
 | Nút ô vuông nhiều màu ở cạnh phải | Mở bảng chọn (tiện trên điện thoại) |
 
 Bộ gõ Telex hay biến `/theme` thành `/thêm`. Script hiểu cả `/thêm` và `/nen`, nên không cần tắt bộ gõ.
@@ -151,7 +150,7 @@ Pull request luôn được chào đón. Nhánh `main` được bảo vệ, nên
 <details>
 <summary><b>English</b></summary>
 
-**Pixel Chat Themes** adds animated pixel/ASCII wallpapers behind the Claude chat: 5 scenes (Vietnamese Lunar New Year Tet with banh chung & fireworks, Vietnam's flag waving over Ha Long Bay, Sakura Breeze over Mt. Fuji, a cosmic galaxy with a black hole, and Hoi An's lanterns by night).
+**Pixel Chat Themes** adds animated pixel/ASCII wallpapers behind the Claude chat: 4 scenes (Vietnam's flag waving over Ha Long Bay, Sakura Breeze over Mt. Fuji, a cosmic galaxy with a black hole, and Hoi An's lanterns by night).
 
 - **claude.ai in a browser** (desktop, iPhone Safari, Android Firefox): install a userscript manager (Tampermonkey, Userscripts, Violentmonkey), then open the [install link](https://raw.githubusercontent.com/aqua2409z/pixel-chat-themes/main/claude-pixel-themes.user.js). Type `/theme` or press `Alt+T`.
 - **Claude Desktop, Code tab**: **+** → **Plugins** → **Add marketplace** `aqua2409z/pixel-chat-themes` → install **pixel-themes**, then run `/pixel`. Plugins can only draw a strip above the prompt, a side pane and message frames.
