@@ -2,7 +2,7 @@
 // @name         Pixel Chat Themes
 // @name:vi      Pixel Chat Themes – hình nền pixel cho claude.ai
 // @namespace    https://github.com/aqua2409z/pixel-chat-themes
-// @version      2.0.0
+// @version      2.1.0
 // @description  Animated pixel/ASCII wallpapers behind the claude.ai chat. Type /theme to pick one.
 // @description:vi Hình nền pixel/ASCII chuyển động phía sau khung chat claude.ai. Gõ /theme để chọn.
 // @author       aqua2409z
@@ -1458,6 +1458,407 @@
         const flick = 0.3 + 0.07 * Math.sin(t * 2.6 + l.ph) + 0.03 * Math.sin(t * 7.3 + l.ph * 2);
         w.glow(l.x + mid + sway, l.y + sp.h / 2 - 0.5, g.small ? 3.5 : 6, l.col[2], flick * l.a);
         w.sprite(sp, l.x + sway, l.y, { pal: l.pal, a: l.a, seed: l.seed });
+      }
+    },
+  });
+
+  /* --------------------------------------------------------------------- tet */
+  // Tết Việt Nam: Bếp lửa hồng, Nồi bánh chưng đêm 30, Pháo hoa giao thừa rực rỡ, Cành mai đào & Đèn lồng đỏ.
+
+  const BANH_CHUNG_POT = sprite(
+    [
+      '    ==========    ',
+      '   /HHHHHHHHHH\\   ',
+      '  |############|  ',
+      ' ==############== ',
+      '  |############|  ',
+      '  |############|  ',
+      '  |############|  ',
+      '   \\__________/   ',
+    ],
+    {
+      '=': ['#94a3b8', '#cbd5e1', '='],
+      '/': ['#64748b', '#94a3b8', '/'],
+      '\\': ['#64748b', '#94a3b8', '\\'],
+      '|': ['#475569', '#64748b', '|'],
+      H: ['#334155', '#94a3b8', '='],
+      '#': ['#1e293b', '#475569', '#'],
+      _: ['#334155', '#475569', '_'],
+    },
+  );
+
+  const TET_BRANCH = sprite(
+    [
+      '                                      bbbbbbbbbbbb',
+      '                              bbbbbbbbb     bbbbbb',
+      '                     bbbbbbbbbb               bbbb',
+      '              MmmM     bbbbb     DddD             ',
+      '      DddD   myYYym     bbb     dfFFfd    MmmM    ',
+      '     dfFFfd   MmmM     bb bb     DddD    myYYym   ',
+      '      DddD            bb   bb             MmmM    ',
+      '            MmmM     bb     bb   DddD             ',
+      '           myYYym   bb       b  dfFFfd    L       ',
+      '            MmmM                DddD     lRl      ',
+      '                                         lRl      ',
+      '                                         lRl      ',
+      '                                          T       ',
+    ],
+    {
+      b: ['#451a03', '#271002', '#'],
+      M: ['#d97706', '#b45309', '*'],
+      m: ['#f59e0b', '#fbbf24', '+'],
+      y: ['#fde047', '#fef08a', '°'],
+      Y: ['#ffffff', '#fde047', 'o'],
+      D: ['#db2777', '#be185d', '*'],
+      d: ['#f472b6', '#fb7185', '+'],
+      f: ['#fce7f3', '#fda4af', '°'],
+      F: ['#ffffff', '#fce7f3', 'o'],
+      L: ['#7f1d1d', '#450a0a', '='],
+      R: ['#dc2626', '#ef4444', '#'],
+      l: ['#ef4444', '#f87171', '|'],
+      T: ['#f59e0b', '#d97706', 'v'],
+    },
+  );
+
+  const FIREWORK_PALS = [
+    { name: 'gold-red', colors: ['#ef4444', '#f59e0b', '#fbbf24', '#fef08a', '#ffffff'] },
+    { name: 'emerald-cyan', colors: ['#10b981', '#06b6d4', '#6ee7b7', '#a5f3fc', '#ffffff'] },
+    { name: 'lotus-magenta', colors: ['#ec4899', '#a855f7', '#f472b6', '#fbcfe8', '#ffffff'] },
+    { name: 'rainbow', colors: ['#ef4444', '#facc15', '#22c55e', '#38bdf8', '#c084fc'] },
+  ];
+
+  function spawnRocket(w, fromX = null, fromY = null) {
+    const pal = pick(FIREWORK_PALS);
+    const startX = fromX != null ? fromX : rnd(w.cols * 0.15, w.cols * 0.85);
+    const targetY = rnd(w.rows * 0.12, w.rows * 0.45);
+    const startY = fromY != null ? fromY : w.rows + 2;
+    const speed = rnd(28, 42);
+    const ang = fromX != null ? rnd(-0.35, 0.35) : rnd(-0.2, 0.2);
+    return {
+      type: 'rocket',
+      x: startX,
+      y: startY,
+      vx: Math.sin(ang) * speed * 0.4,
+      vy: -speed,
+      targetY,
+      pal,
+      life: 0,
+    };
+  }
+
+  function explodeFirework(rocket, w) {
+    const sparks = [];
+    const count = rint(32, 48);
+    const pal = rocket.pal.colors;
+    for (let i = 0; i < count; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const sp = rnd(6, 26);
+      sparks.push({
+        x: rocket.x,
+        y: rocket.y,
+        vx: Math.cos(ang) * sp,
+        vy: Math.sin(ang) * sp * 0.75,
+        color: pick(pal),
+        ch: pick(['*', '+', '·', '°']),
+        life: rnd(0.9, 1.8),
+        maxLife: rnd(1.2, 1.8),
+      });
+    }
+    return sparks;
+  }
+
+  THEMES.push({
+    id: 'tet',
+    name: 'Tết Việt Nam',
+    dark: true,
+    alias: ['tet', 'xuan', 'tet ta', 'banh chung', 'giao thua', 'phao hoa', 'mai dao', 'lunar new year', 'new year', 'nam moi'],
+    glyphs: '*+~o:.•#°',
+    bg(c, w, h, W) {
+      const g = c.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#020617');
+      g.addColorStop(0.35, '#081226');
+      g.addColorStop(0.72, '#121e36');
+      g.addColorStop(1, '#1c1917');
+      c.fillStyle = g;
+      c.fillRect(0, 0, w, h);
+
+      // Warm glow around the hearth area
+      const potX = Math.round(w * (W.cols < 60 ? 0.5 : 0.28));
+      const potY = Math.round(h * 0.82);
+      rglow(c, potX, potY, Math.max(w, h) * 0.38, '#ea580c', 0.32);
+      rglow(c, potX, potY, Math.max(w, h) * 0.18, '#ef4444', 0.4);
+    },
+    under(w) {
+      // Spring Blossom Branch at top-right
+      const bx = Math.max(0, w.cols - TET_BRANCH.w);
+      w.sprite(TET_BRANCH, bx, 0);
+
+      // Bánh Chưng Pot & Firewood at bottom
+      const potX = Math.round(w.cols * (w.cols < 60 ? 0.5 : 0.28));
+      const potY = Math.max(4, w.rows - BANH_CHUNG_POT.h - 3);
+
+      // Firewood logs under the pot
+      for (let x = potX - 2; x <= potX + BANH_CHUNG_POT.w + 1; x++) {
+        w.tile(x, potY + BANH_CHUNG_POT.h, '#78350f', '#451a03', '=', 0.95);
+        w.tile(x, potY + BANH_CHUNG_POT.h + 1, '#451a03', '#271002', '#', 0.95);
+      }
+      w.sprite(BANH_CHUNG_POT, potX, potY);
+    },
+    init(w) {
+      const area = w.cols * w.rows;
+      const density = cfg.density || 1.0;
+      const potX = Math.round(w.cols * (w.cols < 60 ? 0.5 : 0.28));
+      const potY = Math.max(4, w.rows - BANH_CHUNG_POT.h - 3);
+
+      w.s = {
+        potX,
+        potY,
+        stars: Array.from({ length: Math.round(clamp(area / 25, 20, 60) * density) }, () => ({
+          x: rnd(0, w.cols),
+          y: rnd(0, w.rows * 0.55),
+          tw: rnd(0.8, 3.0),
+          ph: Math.random() * Math.PI * 2,
+          color: pick(['#fef08a', '#ffffff', '#fed7aa', '#fde047']),
+          ch: pick(['.', '·', '+', '*']),
+        })),
+        rockets: [],
+        sparks: [],
+        nextRocket: rnd(1.0, 2.5),
+        flash: 0,
+        flashCol: '#ef4444',
+        flashX: 0,
+        flashY: 0,
+        embers: Array.from({ length: Math.round(22 * density) }, () => ({
+          x: potX + rnd(1, BANH_CHUNG_POT.w - 1),
+          y: potY + BANH_CHUNG_POT.h + rnd(0, 1),
+          vx: rnd(-1.5, 1.5),
+          vy: rnd(-3, -7),
+          life: rnd(0.8, 2.2),
+          maxLife: rnd(1.5, 2.5),
+          color: pick(['#fbbf24', '#f97316', '#ef4444', '#fef08a']),
+        })),
+        steam: Array.from({ length: Math.round(18 * density) }, () => ({
+          x: potX + rnd(2, BANH_CHUNG_POT.w - 2),
+          y: potY - rnd(0, 2),
+          vx: rnd(-0.6, 0.6),
+          vy: rnd(-1.5, -3.2),
+          life: rnd(1.2, 2.8),
+          maxLife: rnd(2.0, 3.2),
+        })),
+        petals: Array.from({ length: Math.round(clamp(area / 30, 16, 45) * density) }, () => ({
+          x: rnd(0, w.cols),
+          y: rnd(0, w.rows),
+          vx: rnd(-1.2, -0.4),
+          vy: rnd(0.8, 1.8),
+          color: pick(['#fde047', '#fbbf24', '#f472b6', '#fda4af']),
+          ch: pick(['°', '*', '+', '·']),
+          ph: Math.random() * Math.PI * 2,
+        })),
+        sparklers: [],
+        mouseTimer: 0,
+      };
+    },
+    frame(w, dt) {
+      const s = w.s;
+      const t = w.t;
+      const sp = cfg.speed || 1.0;
+      const mouse = w.mouse;
+      const hasMouse = !!(mouse && mouse.active);
+      const potX = s.potX;
+      const potY = s.potY;
+
+      // Twinkling stars in upper sky
+      for (const st of s.stars) {
+        const a = 0.35 + 0.55 * (0.5 + 0.5 * Math.sin(t * st.tw + st.ph));
+        w.glyph(st.x, st.y, st.ch, st.color, a);
+      }
+
+      // 1. Dynamic Leaping Hearth Flames underneath the pot
+      const fireW = BANH_CHUNG_POT.w + 2;
+      const fireBaseY = potY + BANH_CHUNG_POT.h;
+      const hearthBreath = 0.85 + 0.15 * Math.sin(t * 7);
+      w.glow(potX + BANH_CHUNG_POT.w / 2, fireBaseY, fireW * 1.6, '#f97316', 0.42 * hearthBreath);
+      w.glow(potX + BANH_CHUNG_POT.w / 2, fireBaseY - 1, fireW * 0.9, '#ef4444', 0.48 * hearthBreath);
+
+      for (let fx = 0; fx < fireW; fx++) {
+        const colX = potX - 1 + fx;
+        const wave = Math.sin(t * 8 + fx * 1.4) * 1.2 + Math.cos(t * 13 + fx * 2.8) * 0.8;
+        const flameH = Math.max(1, Math.round(2.6 + wave));
+        for (let fy = 0; fy < flameH; fy++) {
+          const cy = fireBaseY - fy;
+          if (cy <= potY) continue;
+          let fgCol = '#ef4444';
+          let bgCol = '#7f1d1d';
+          let ch = '#';
+          if (fy === 0) {
+            fgCol = '#fef08a';
+            bgCol = '#f59e0b';
+            ch = '#';
+          } else if (fy === 1) {
+            fgCol = '#fbbf24';
+            bgCol = '#ea580c';
+            ch = '~';
+          } else {
+            fgCol = '#ef4444';
+            bgCol = null;
+            ch = '^';
+          }
+          w.tile(colX, cy, bgCol, fgCol, ch, 0.92);
+        }
+      }
+
+      // 2. Rising Steam from the Bánh Chưng Pot
+      for (let i = 0; i < s.steam.length; i++) {
+        const p = s.steam[i];
+        p.life -= dt * sp;
+        p.x += (p.vx + Math.sin(t * 2 + p.y * 0.4) * 0.35) * dt * sp * 10;
+        p.y += p.vy * dt * sp * 8;
+        if (p.life <= 0 || p.y < potY - 18) {
+          s.steam[i] = {
+            x: potX + rnd(2, BANH_CHUNG_POT.w - 2),
+            y: potY - rnd(0, 1.5),
+            vx: rnd(-0.6, 0.6),
+            vy: rnd(-1.5, -3.2),
+            life: rnd(1.4, 3.0),
+            maxLife: rnd(2.0, 3.2),
+          };
+          continue;
+        }
+        const a = clamp((p.life / p.maxLife) * 0.7, 0.05, 0.75);
+        const ch = p.life < p.maxLife * 0.4 ? '·' : p.life < p.maxLife * 0.7 ? '°' : '~';
+        w.glyph(p.x, p.y, ch, '#cbd5e1', a);
+      }
+
+      // 3. Glowing Fire Embers
+      for (let i = 0; i < s.embers.length; i++) {
+        const e = s.embers[i];
+        e.life -= dt * sp;
+        e.x += (e.vx + Math.sin(t * 3 + i) * 0.4) * dt * sp * 10;
+        e.y += e.vy * dt * sp * 8;
+        if (e.life <= 0 || e.y < potY - 14) {
+          s.embers[i] = {
+            x: potX + rnd(1, BANH_CHUNG_POT.w - 1),
+            y: fireBaseY + rnd(0, 0.8),
+            vx: rnd(-1.5, 1.5),
+            vy: rnd(-3, -7),
+            life: rnd(0.8, 2.2),
+            maxLife: rnd(1.5, 2.5),
+            color: pick(['#fbbf24', '#f97316', '#ef4444', '#fef08a']),
+          };
+          continue;
+        }
+        const a = clamp(e.life / e.maxLife, 0.1, 1);
+        w.glyph(e.x, e.y, e.life < 0.6 ? '·' : '*', e.color, a);
+      }
+
+      // 4. Falling Spring Blossom Petals (Mai & Đào)
+      for (let i = 0; i < s.petals.length; i++) {
+        const pt = s.petals[i];
+        pt.x += (pt.vx + Math.sin(t * 1.8 + pt.ph) * 0.5) * dt * sp * 7;
+        pt.y += pt.vy * dt * sp * 6;
+        if (pt.y > w.rows + 2 || pt.x < -3) {
+          pt.x = rnd(w.cols * 0.4, w.cols + 4);
+          pt.y = rnd(-4, -1);
+          pt.ph = Math.random() * Math.PI * 2;
+        }
+        w.glyph(pt.x, pt.y, pt.ch, pt.color, 0.85);
+      }
+
+      // 5. Grand Giao Thừa Fireworks System
+      s.nextRocket -= dt * sp;
+      if (s.nextRocket <= 0) {
+        s.rockets.push(spawnRocket(w));
+        s.nextRocket = rnd(1.6, 3.2);
+      }
+
+      // Handle sky flash glow from recent explosion
+      if (s.flash > 0) {
+        s.flash -= dt;
+        w.glow(s.flashX, s.flashY, Math.min(w.cols, w.rows) * 0.45, s.flashCol, clamp(s.flash * 0.6, 0, 0.4));
+      }
+
+      // Update rockets
+      for (let i = s.rockets.length - 1; i >= 0; i--) {
+        const rk = s.rockets[i];
+        rk.x += rk.vx * dt * sp;
+        rk.y += rk.vy * dt * sp;
+        rk.vy += 12 * dt * sp; // slight deceleration
+        rk.life += dt;
+
+        // Spark trail behind rocket
+        w.glyph(rk.x, rk.y, '^', '#ffffff', 0.95);
+        w.glyph(rk.x - rk.vx * 0.04, rk.y + 1.2, '!', pick(rk.pal.colors), 0.7);
+        w.glyph(rk.x - rk.vx * 0.08, rk.y + 2.4, '·', '#f97316', 0.45);
+
+        // Detonation condition
+        if (rk.y <= rk.targetY || rk.vy >= -4 || rk.life > 2.0) {
+          s.sparks.push(...explodeFirework(rk, w));
+          s.flash = 0.28;
+          s.flashX = rk.x;
+          s.flashY = rk.y;
+          s.flashCol = rk.pal.colors[0];
+          s.rockets.splice(i, 1);
+        }
+      }
+
+      // Update bursting firework sparks
+      for (let i = s.sparks.length - 1; i >= 0; i--) {
+        const spk = s.sparks[i];
+        spk.life -= dt * sp;
+        spk.x += spk.vx * dt * sp;
+        spk.y += spk.vy * dt * sp;
+        spk.vy += 9.5 * dt * sp; // gravity
+        spk.vx *= 0.96; // drag
+
+        if (spk.life <= 0 || spk.y > w.rows + 3) {
+          s.sparks.splice(i, 1);
+          continue;
+        }
+
+        const a = clamp(spk.life / spk.maxLife, 0.05, 1);
+        const ch = spk.life > spk.maxLife * 0.5 ? spk.ch : spk.life > spk.maxLife * 0.2 ? '·' : '.';
+        w.glyph(spk.x, spk.y, ch, spk.color, a);
+      }
+
+      // 6. Interactive Mouse FX: Pháo Bông Cầm Tay (Sparkler)
+      if (hasMouse) {
+        w.glow(mouse.x, mouse.y, 5.0, '#f59e0b', 0.45);
+        w.glyph(mouse.x, mouse.y, '★', '#fef08a', 1.0);
+
+        // Emit sparkling sparks from cursor
+        const sparkCount = rint(3, 6);
+        for (let k = 0; k < sparkCount; k++) {
+          const ang = Math.random() * Math.PI * 2;
+          const v = rnd(4, 18);
+          s.sparklers.push({
+            x: mouse.x,
+            y: mouse.y,
+            vx: Math.cos(ang) * v,
+            vy: Math.sin(ang) * v,
+            life: rnd(0.18, 0.42),
+            color: pick(['#fef08a', '#ffffff', '#fde047', '#f97316', '#fb7185']),
+          });
+        }
+
+        // Periodic celebratory mini rocket when moving mouse
+        s.mouseTimer += dt;
+        if (s.mouseTimer > 2.0 && Math.hypot(mouse.vx, mouse.vy) > 0.8) {
+          s.rockets.push(spawnRocket(w, mouse.x, mouse.y));
+          s.mouseTimer = 0;
+        }
+      }
+
+      // Update mouse sparkler particles
+      for (let i = s.sparklers.length - 1; i >= 0; i--) {
+        const spk = s.sparklers[i];
+        spk.life -= dt;
+        spk.x += spk.vx * dt;
+        spk.y += spk.vy * dt;
+        if (spk.life <= 0) {
+          s.sparklers.splice(i, 1);
+          continue;
+        }
+        w.glyph(spk.x, spk.y, spk.life > 0.2 ? '*' : '·', spk.color, spk.life * 2.8);
       }
     },
   });
